@@ -8,13 +8,15 @@ import Mathlib.Data.Nat.Basic
 /-!
 # Part 2.1: Namespaces and Sections
 
-As a mathematical development grows, we need tools to organize declarations, avoid naming
-collisions, and factor out repeated parameters. Lean 4 provides **namespaces**, **sections**,
-**variable declarations**, and **visibility modifiers** for this purpose.
+As a mathematical development grows, we need tools to group objects and their associated results
+semantically—clarifying the dependency structure of definitions and lemmas—while also keeping
+names organized and factoring out repeated parameters. Lean 4 provides **namespaces**,
+**dot notation**, **sections**, **variable declarations**, and **visibility modifiers** for this
+purpose.
 
 ---
 
-## 1. Namespaces (`namespace ... end`, Hierarchical Names, Avoiding Collisions)
+## 1. Namespaces (`namespace ... end`, Hierarchical Names, Semantic Grouping)
 
 In a large library like Mathlib, dozens of types have operations named `add`, `map`, or `length`.
 **Namespaces** group declarations under a hierarchical prefix (such as `Nat.add_comm` vs.
@@ -99,7 +101,39 @@ example (n : ℕ) : ⟪n⟫ = n + n := by
 /-!
 ---
 
-## 3. Sections and Variable Scoping (`section ... end` and `variable`)
+## 3. Dot Notation (`.<name>` and `<term>.<name>`)
+
+Because Lean groups declarations semantically under type namespaces (such as `Nat`, `List`, `Or`,
+or `Eq`), you often do not need to write the namespace prefix explicitly:
+
+1. **Expected-type dot notation (`.<name>`):** When Lean already knows the expected type `T` from
+   context (a type annotation, a function's parameter type, or the proof goal), writing `.foo`
+   resolves to `T.foo`.
+2. **Generalized field / projection dot notation (`<term>.<name>`):** When `t` is a term of type
+   `T ...`, writing `t.foo` resolves to `T.foo` and automatically passes `t` as the first parameter
+   of type `T`.
+-/
+
+-- Expected type is `ℕ` (`Nat`), so `.zero` and `.succ` resolve to `Nat.zero` and `Nat.succ`:
+#eval (.zero : ℕ)
+#eval Geometry.area (.succ 2) -- `Geometry.area` expects `ℕ`, so `.succ 2` means `Nat.succ 2`
+
+-- Expected type of the proof is `P ∨ Q` (`Or P Q`), so `.inl` resolves to `Or.inl`:
+example (P Q : Prop) (hp : P) : P ∨ Q :=
+  .inl hp
+
+-- `(4 : ℕ)` has type `Nat` and `[10, 20, 30]` has type `List ℕ`:
+#eval (4 : ℕ).succ         -- `Nat.succ 4` = 5
+#eval [10, 20, 30].length  -- `List.length [10, 20, 30]` = 3
+
+-- Works on proof terms too: `h : a = b` has type `Eq a b`, so `h.symm` is `Eq.symm h`:
+example (a b : ℕ) (h : a = b) : b = a :=
+  h.symm
+
+/-!
+---
+
+## 4. Sections and Variable Scoping (`section ... end` and `variable`)
 
 When several theorems share the same parameters or typeclass assumptions, declare them once with
 `variable` inside a `section ... end` block:
@@ -133,7 +167,7 @@ end SharedVariables
 /-!
 ---
 
-## 4. Visibility Modifiers (`protected` and `private`)
+## 5. Visibility Modifiers (`protected` and `private`)
 
 - **`protected`**: A `protected` declaration inside `namespace Foo` **must still be referred to as
   `Foo.bar`** (or via dot notation) even after `open Foo`. Mathlib uses `protected` extensively
@@ -167,7 +201,7 @@ example (n : ℕ) : tick n = n + 1 := by
 /-!
 ---
 
-## 5. Exercises
+## 6. Exercises
 
 Replace each `sorry` below with a valid implementation or proof.
 (Reference solutions are in
