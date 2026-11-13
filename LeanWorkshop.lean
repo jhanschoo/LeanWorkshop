@@ -1,1 +1,37 @@
-import LeanWorkshop.Basic
+-- Part 1: Basics
+import LeanWorkshop.Part1_Basics.S1_InfoviewAndSymbols
+import LeanWorkshop.Part1_Basics.S2_BasicProofs
+import LeanWorkshop.Part1_Basics.S3_SyntaxAndTypes
+
+-- Part 2: Namespaces and Project Organization
+import LeanWorkshop.Part2_Organization.S1_NamespacesAndSections
+import LeanWorkshop.Part2_Organization.S2_MiniProject.S1_Defs
+import LeanWorkshop.Part2_Organization.S2_MiniProject.S2_Lemmas
+import LeanWorkshop.Part2_Organization.S3_ProjectStructure
+
+-- Part 3: Working with Mathlib
+import LeanWorkshop.Part3_Mathlib.S1_FindingThings
+import LeanWorkshop.Part3_Mathlib.S2_Nomenclature
+import LeanWorkshop.Part3_Mathlib.S3_PowerTactics
+import LeanWorkshop.Part3_Mathlib.S4_StyleAndLinters
+
+-- Part 4: Autoformalization Demo
+import LeanWorkshop.Part4_Autoformalization.S1_StatementTranslation
+import LeanWorkshop.Part4_Autoformalization.S2_ProofSketching
+import LeanWorkshop.Part4_Autoformalization.S3_ErrorRecovery
+import LeanWorkshop.Part4_Autoformalization.S4_LiveSandbox
+
+-- Solutions
+import LeanWorkshop.Solutions.Part1_Basics.S1_InfoviewAndSymbols
+import LeanWorkshop.Solutions.Part1_Basics.S2_BasicProofs
+import LeanWorkshop.Solutions.Part1_Basics.S3_SyntaxAndTypes
+import LeanWorkshop.Solutions.Part2_Organization.S1_NamespacesAndSections
+import LeanWorkshop.Solutions.Part2_Organization.S3_ProjectStructure
+import LeanWorkshop.Solutions.Part3_Mathlib.S1_FindingThings
+import LeanWorkshop.Solutions.Part3_Mathlib.S2_Nomenclature
+import LeanWorkshop.Solutions.Part3_Mathlib.S3_PowerTactics
+import LeanWorkshop.Solutions.Part3_Mathlib.S4_StyleAndLinters
+import LeanWorkshop.Solutions.Part4_Autoformalization.S1_StatementTranslation
+import LeanWorkshop.Solutions.Part4_Autoformalization.S2_ProofSketching
+import LeanWorkshop.Solutions.Part4_Autoformalization.S3_ErrorRecovery
+import LeanWorkshop.Solutions.Part4_Autoformalization.S4_LiveSandbox
