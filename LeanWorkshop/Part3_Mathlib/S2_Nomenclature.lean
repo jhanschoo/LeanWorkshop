@@ -8,16 +8,57 @@ import Mathlib.Data.Nat.Basic
 import Mathlib.Data.Int.Basic
 import Mathlib.Algebra.Order.Ring.Int
 import Mathlib.Order.Basic
+import Mathlib.GroupTheory.Coset.Card
 
 /-!
 # Part 3.2: Mathlib Nomenclature and Dot Notation
 
-Even without running `exact?`, you can predict the exact name of most Mathlib lemmas just by
-reading the statement from the inside out.
+Even without running `exact?`, you can predict the exact name of most Mathlib lemmas by reading
+the statement **from the outside in** (conclusion first for implications; outermost operator first
+for nested expressions such as `mul_add` for `a * (b + c)`) and left-to-right in written infix
+order.
+
+For the full official guidelines, see:
+- **Mathlib Naming Conventions:** `https://leanprover-community.github.io/contribute/naming.html`
+- **Mathlib Style Guide:** `https://leanprover-community.github.io/contribute/style.html`
 
 ---
 
-## 1. The Grammar of Mathlib Lemma Names
+## 1. Capitalization Conventions
+
+| Kind | Style | Example |
+| :--- | :--- | :--- |
+| Terms of `Prop` (theorems, lemmas, proof variables) | `snake_case` | `add_comm`, `le_of_lt` |
+| Types, structures, classes, inductive types | `UpperCamelCase` | `Point2D`, `RingHom` |
+| Predicates (`... → Prop`) | `UpperCamelCase` (often `Is...`) | `List.IsPrefix` |
+| Data definitions, functions, fields, constructors | `lowerCamelCase` | `doubleList`, `normSq` |
+
+Rule of thumb: **capitalize Types (`Type*`), `lowerCamelCase` data/functions, `snake_case`
+proofs!** When a `camelCase` identifier (or an `UpperCamelCase` type converted to `lowerCamelCase`)
+appears inside a `snake_case` theorem name, it keeps its internal `lowerCamelCase` (as in
+`doubleBound_even_mod` below).
+-/
+
+namespace LeanWorkshop.Part3
+
+/-- An `UpperCamelCase` structure wrapping a natural number bound. -/
+structure UpperBound where
+  /-- The stored upper bound value. -/
+  val : ℕ
+
+/-- A `lowerCamelCase` function returning a value. -/
+def doubleBound (b : UpperBound) : ℕ :=
+  2 * b.val
+
+/-- A `snake_case` theorem stating a `Prop`. -/
+theorem doubleBound_even_mod (b : UpperBound) : doubleBound b % 2 = 0 := by
+  dsimp [doubleBound]
+  omega
+
+/-!
+---
+
+## 2. The Grammar of Mathlib Lemma Names
 
 1. **Implications read conclusion-first (`conclusion_of_hyp1_of_hyp2`):**
    - `lt_of_le_of_lt`: from `a ≤ b` and `b < c`, conclude `a < c`.
@@ -29,8 +70,6 @@ reading the statement from the inside out.
    - `not_le`: `(¬ a ≤ b) ↔ (b < a)`.
 -/
 
-namespace LeanWorkshop.Part3
-
 #check lt_of_le_of_lt
 #check le_of_lt
 #check ne_of_lt
@@ -40,7 +79,7 @@ namespace LeanWorkshop.Part3
 /-!
 ---
 
-## 2. The Symbol Dictionary
+## 3. The Symbol Dictionary
 
 Mathlib translates mathematical symbols into consistent `snake_case` tokens:
 
@@ -60,7 +99,7 @@ Reading `a + b = b + a` as tokens gives `add_comm`; reading `a * (b + c) = a * b
 
 ---
 
-## 3. Structural Laws and Positional Suffixes
+## 4. Structural Laws and Positional Suffixes
 
 - **Algebraic properties:** `comm`, `assoc`, `left_comm`, `right_comm`
 - **Identity & inverse laws:** `zero_add`, `add_zero`, `one_mul`, `mul_one`, `sub_self`, `neg_neg`
@@ -81,7 +120,7 @@ Reading `a + b = b + a` as tokens gives `add_comm`; reading `a * (b + c) = a * b
 /-!
 ---
 
-## 4. Standard Predicates (`pos`, `nonneg`, `neg`, `mono`, `inj`)
+## 5. Standard Predicates (`pos`, `nonneg`, `neg`, `mono`, `inj`)
 
 Instead of writing `0 < _`, `0 ≤ _`, or `_ < 0`, Mathlib names inequalities against zero using
 predicates:
@@ -100,7 +139,36 @@ predicates:
 /-!
 ---
 
-## 5. Dot Notation on Proof Terms
+## 6. Famous Theorems vs. Their Structural Names in Mathlib
+
+Mathlib strongly prefers **structural names** over **eponyms** (historical names vary across
+languages and cultures, and figures like Euler, Cauchy, or Lagrange have dozens of theorems). A
+structural name lets you read the conclusion and hypotheses straight from the identifier, while
+the eponym is kept in the docstring so semantic search tools (such as LeanSearch and LeanExplore)
+still find it:
+
+| Famous Name | Mathlib Structural Name | Statement Idea |
+| :--- | :--- | :--- |
+| **Lagrange's Theorem** | `Subgroup.card_subgroup_dvd_card` | `Nat.card H ∣ Nat.card G` |
+| **Fermat's Little Theorem** | `ZMod.pow_card_sub_one_eq_one` | `a ≠ 0 → a ^ (p - 1) = 1` |
+| **Pigeonhole Principle** | `Fintype.exists_ne_map_eq_of_card_lt` | `∃ x y, x ≠ y ∧ f x = f y` |
+| **Cauchy–Schwarz** | `norm_inner_le_norm` | `‖⟪x, y⟫‖ ≤ ‖x‖ * ‖y‖` |
+| **Squeeze Theorem** | `tendsto_of_tendsto_of_tendsto_of_le_of_le` | `f ≤ g ≤ h` implies `g → a` |
+| **Intermediate Value** | `intermediate_value_Icc` | `Icc (f a) (f b) ⊆ f '' Icc a b` |
+| **FTC (Part 2)** | `intervalIntegral.integral_eq_sub_of_hasDerivAt` | `∫ a..b, f' = f b - f a` |
+| **Cantor's Theorem** | `Function.cantor_surjective` | `¬ Surjective (f : α → Set α)` |
+
+Notice that `Function.cantor_surjective` is a rare exception where the eponym appears in the name
+itself (alongside variants like `inner_mul_inner_self_le` for squared Cauchy–Schwarz).
+-/
+
+#check Subgroup.card_subgroup_dvd_card
+#check Function.cantor_surjective
+
+/-!
+---
+
+## 7. Dot Notation on Proof Terms
 
 Because `Eq`, `LE.le`, `LT.lt`, and `Iff` are types/predicates in namespaces, Lean lets you call
 projection lemmas directly on proof terms `h`:
@@ -122,7 +190,7 @@ example {P Q : Prop} (h : P ↔ Q) (hq : Q) : P :=
 /-!
 ---
 
-## 6. Exercises
+## 8. Exercises
 
 Solve these **without** `exact?` or automation tactics—predict the Mathlib lemma name or use dot
 notation directly!

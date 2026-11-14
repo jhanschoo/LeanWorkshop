@@ -13,7 +13,6 @@ import LeanWorkshop.Part2_Organization.S3_ProjectStructure
 import LeanWorkshop.Part3_Mathlib.S1_FindingThings
 import LeanWorkshop.Part3_Mathlib.S2_Nomenclature
 import LeanWorkshop.Part3_Mathlib.S3_PowerTactics
-import LeanWorkshop.Part3_Mathlib.S4_StyleAndLinters
 
 -- Part 4: Autoformalization Demo
 import LeanWorkshop.Part4_Autoformalization.S1_StatementTranslation
@@ -30,7 +29,6 @@ import LeanWorkshop.Solutions.Part2_Organization.S3_ProjectStructure
 import LeanWorkshop.Solutions.Part3_Mathlib.S1_FindingThings
 import LeanWorkshop.Solutions.Part3_Mathlib.S2_Nomenclature
 import LeanWorkshop.Solutions.Part3_Mathlib.S3_PowerTactics
-import LeanWorkshop.Solutions.Part3_Mathlib.S4_StyleAndLinters
 import LeanWorkshop.Solutions.Part4_Autoformalization.S1_StatementTranslation
 import LeanWorkshop.Solutions.Part4_Autoformalization.S2_ProofSketching
 import LeanWorkshop.Solutions.Part4_Autoformalization.S3_ErrorRecovery

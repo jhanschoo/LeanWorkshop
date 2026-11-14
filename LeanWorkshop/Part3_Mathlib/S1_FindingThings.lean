@@ -74,40 +74,78 @@ Once you know or guess a lemma name, inspect its exact signature and implementat
 /-!
 ---
 
-## 3. External Search Engines and Documentation
+## 3. Searching Mathlib and External Libraries
 
 When the lemma you need is not yet imported in your file—or you only know its mathematical idea—use
-these community search tools:
+these search tools:
 
 | Tool | Best For | Example Query / URL |
 | :--- | :--- | :--- |
-| **Loogle** | Type / pattern search | `https://loogle.lean-lang.org` — `?a + ?b = ?b + ?a` |
-| **LeanSearch** | Natural language queries | `https://leansearch.net` — "sum of first n naturals" |
-| **Moogle** | Semantic Mathlib search | `https://www.moogle.ai` — "triangle inequality" |
+| **Loogle** | Type / pattern search | `https://loogle.lean-lang.org` (or `#loogle` in-editor) — `?a + ?b = ?b + ?a`, `List ?a → List (List ?a)` |
+| **LeanSearch** | Natural language queries | `https://leansearch.net` (or `#leansearch "..."` in-editor) — `"sum of first n naturals"` |
+| **LeanExplore** | Hybrid semantic + ecosystem search | `https://www.leanexplore.com` (web, Python API, MCP) — searches `Mathlib`, `Batteries`, `Std`, `PhysLean`, etc. |
 | **Mathlib4 Docs** | API & module browsing | `https://leanprover-community.github.io/mathlib4_docs/` |
-| **Reservoir** | Lean 4 package index | `https://reservoir.lean-lang.org` |
-| **Lean Zulip** | Live Q&A (`#new members`) | `https://leanprover.zulipchat.com` |
+
+### Practical Search Workflow Today
+
+In practice, experienced Lean users combine external search with local exploration:
+1. **Start with Loogle or LeanSearch / LeanExplore:** Use **Loogle** when you know the rough type
+   shape or constants involved, and **LeanSearch** or **LeanExplore** when you only have a
+   natural-language description (or want to search across downstream libraries beyond Mathlib).
+   You can also invoke `#loogle` and `#leansearch "..."` directly in-editor when `LeanSearchClient`
+   is available.
+2. **Grep your local `.lake/packages/mathlib` checkout** (or use VS Code workspace symbol search
+   `Ctrl+T` / `Cmd+T`): reading neighboring lemmas in the same Mathlib file often reveals naming
+   conventions and helper theorems faster than any web engine.
+3. **Pair LLMs / coding agents with Lean's kernel:** Ask an LLM (or an agent connected via MCP to
+   LeanExplore / local grep) to suggest candidate Mathlib names, then verify and adapt them inside
+   Lean with `#check`, `exact?`, `apply?`, and `rw?`.
 
 ---
 
-## 4. Community Tutorials and Learning Resources
+## 4. Learning Resources, Community, and Ecosystem
 
-To continue learning after this workshop, these free community resources are the gold standard:
+### Interactive Tutorials (Where to Start)
 
-1. **The Natural Number Game (NNG4)** — Gamified introduction to Lean 4 tactics (`rw`, `induction`,
-   `apply`, `exact`, `simp`). Great right after Part 1.
-2. **Mathematics in Lean (MIL)** — Hands-on interactive repository covering algebra, analysis,
-   topology, and Mathlib idioms (`leanprover-community/mathematics_in_lean`).
-3. **Theorem Proving in Lean 4 (TPIL4)** — Thorough reference on dependent type theory, terms,
-   tactics, typeclasses, and induction.
-4. **The Mechanics of Proof** (Heather Macbeth) — Undergraduate-friendly textbook emphasizing clean
-   structured proofs in Lean 4.
-5. **Formalising Mathematics** (Kevin Buzzard) — Worked problem sheets across groups, rings,
-   filters, and topology.
-6. **Functional Programming in Lean** — Essential if you plan to write Lean programs or custom
-   tactics.
-7. **Lean Blueprints** (`leanblueprint`) — Connects LaTeX dependency graphs with formalized Lean
-   theorems for collaborative projects.
+- **Glimpse of Lean** (`https://github.com/PatrickMassot/GlimpseOfLean`) — **Recommended!** A concise,
+  hands-on tutorial ("for the impatient") that lets you experience proving
+  theorems across logic, analysis, and algebra in just a few hours.
+- **The Natural Number Game (NNG4)** (`https://adam.math.hhu.de/#/g/leanprover-community/nng4`) and
+  **The Mechanics of Proof** (Heather Macbeth) — Both are popular tutorials, targeted at people
+  still somewhat fresh to logic and mathematics.
+
+### Topic Reference Books (Consult by Topic, Not Cover-to-Cover)
+
+It is **not necessarily productive to read these books cover to cover**; instead, consult the
+chapters relevant to the topic or technique you are currently using:
+
+- **Mathematics in Lean (MIL)** (`leanprover-community/mathematics_in_lean`) — Hands-on idioms for
+  working with Mathlib's algebraic hierarchy, topology, filters, calculus, and measure theory.
+- **Theorem Proving in Lean 4 (TPIL4)** — Thorough reference on dependent type theory foundations,
+  inductive types, typeclasses, and tactic basics.
+- **Functional Programming in Lean (FPIL)** — Reference when writing computable Lean 4 programs,
+  monadic code, or custom tactics and metaprograms.
+
+### Community, Package Index, and Prominent Projects
+
+- **Lean Zulip (`https://leanprover.zulipchat.com`)** — The **most central community resource** for
+  Lean 4. Live Q&A (`#new members`, `#mathlib4`), library design discussions, and formalization
+  project coordination all happen here.
+- **Reservoir (`https://reservoir.lean-lang.org`)** — The official package index and registry for the
+  Lean 4 ecosystem, cataloging libraries, tools, and formalizations beyond Mathlib.
+- **Prominent Lean 4 Formalization Projects & Blueprints:** Large collaborative efforts coordinate on
+  Zulip and commonly use **Lean Blueprints** (`leanblueprint`) to connect human-readable LaTeX
+  proofs and dependency graphs directly to verified Lean declarations. Notable examples include:
+  - **Polynomial Freiman–Ruzsa (`teorth/pfr`)** — Terence Tao and collaborators' rapid collaborative
+    formalization in additive combinatorics.
+  - **Fermat's Last Theorem (`ImperialCollegeLondon/FLT`)** — Ongoing multi-year project led by
+    Kevin Buzzard to formalize the modern proof of FLT.
+  - **Carleson (`leanprover-community/carleson`)** — Collaborative formalization of Carleson's
+    theorem in harmonic analysis.
+  - **PrimeNumberTheoremAnd (`AlexKontorovich/PrimeNumberTheoremAnd`)** — Formalization of the
+    Prime Number Theorem with classical error terms and analytic number theory.
+  - **Domain Libraries (e.g., `PhysLean`, `SciLean`, `Cslib`)** — Ecosystem packages for physics,
+    scientific computing, and computer science discoverable on Reservoir.
 
 ---
 
