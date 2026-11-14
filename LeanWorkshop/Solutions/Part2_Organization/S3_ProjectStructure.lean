@@ -19,21 +19,20 @@ namespace LeanWorkshop.Solutions.Part2.Point2D
 open LeanWorkshop.Part2
 open LeanWorkshop.Part2.Point2D
 
-/-- **Exercise 1a:** Define scalar multiplication `scale (k : ℤ) (p : Point2D)` that multiplies
-both coordinates of `p` by `k`. -/
-def scale (k : ℤ) (p : Point2D) : Point2D :=
-  ⟨k * p.x, k * p.y⟩
+/-- **Exercise 1a:** Shift both coordinates of `p` by `(n : ℤ)` while preserving `0 ≤ x + y`. -/
+def shiftDiag (n : ℕ) (p : Point2D) : Point2D :=
+  ⟨p.x + n, p.y + n, by have := p.nonneg_sum; omega⟩
 
-/-- **Exercise 1b:** Prove that scaling `p` by `1` returns `p`. -/
-theorem scale_one (p : Point2D) : scale 1 p = p := by
-  ext <;> simp [scale]
+/-- **Exercise 1b:** Shifting by `0` leaves `p` unchanged (using `ext` + proof irrelevance). -/
+theorem shiftDiag_zero (p : Point2D) : shiftDiag 0 p = p := by
+  ext <;> simp [shiftDiag]
 
-/-- **Exercise 2:** Prove that componentwise addition `Point2D.add` is commutative. -/
-theorem add_comm_point (p q : Point2D) : p.add q = q.add p := by
+/-- **Exercise 2:** Componentwise addition `+` on `Point2D` is commutative. -/
+theorem add_comm_point (p q : Point2D) : p + q = q + p := by
   ext <;> simp [Int.add_comm]
 
-/-- **Exercise 3:** Prove that swapping coordinates distributes over `Point2D.add`. -/
-theorem swap_add (p q : Point2D) : (p.add q).swap = p.swap.add q.swap := by
+/-- **Exercise 3:** Swapping coordinates distributes over `+`. -/
+theorem swap_add (p q : Point2D) : (p + q).swap = p.swap + q.swap := by
   ext <;> simp
 
 end LeanWorkshop.Solutions.Part2.Point2D

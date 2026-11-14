@@ -9,17 +9,27 @@ import LeanWorkshop.Part2_Organization.S2_MiniProject.S1_Defs
 # Part 2.2b: MiniProject — API Lemmas (`Point2D`)
 
 This module imports `S1_Defs.lean` and builds a reusable **API layer** over `Point2D`:
-1. Coordinate projection `@[simp]` lemmas so the simplifier (`simp`) knows how `origin`, `add`, and
-   `swap` act on `.x` and `.y`.
-2. Algebraic properties inside `namespace Point2D`, enabling **dot notation** (`p.swap_swap`,
-   `p.add_origin`, `p.normSq_swap`).
+1. **`@[simp]` annotations** on coordinate projections and typeclass bridges (`zero_def`,
+   `add_def`) so `simp` unfolds `0`, `+`, `origin`, `add`, and `swap` on `.x` and `.y`.
+2. **Algebraic lemmas with `ext` & proof irrelevance**: notice that `ext <;> rfl` and `ext <;> simp`
+   only produce **two** coordinate goals (`.x` and `.y`), because `Point2D.ext` ignores the `Prop`
+   field `nonneg_sum` by proof irrelevance!
+3. **Dot notation** inside `namespace Point2D` (`p.swap_swap`, `p.add_origin`, `p.normSq_swap`).
 -/
 
 namespace LeanWorkshop.Part2.Point2D
 
 variable (p q : Point2D)
 
-/-! ### 1. Coordinate `@[simp]` Lemmas -/
+/-! ### 1. Coordinate & Typeclass `@[simp]` Lemmas -/
+
+@[simp]
+theorem zero_def : (0 : Point2D) = origin :=
+  rfl
+
+@[simp]
+theorem add_def : p + q = p.add q :=
+  rfl
 
 @[simp]
 theorem origin_x : origin.x = 0 := by
@@ -45,9 +55,14 @@ theorem swap_x : p.swap.x = p.y := by
 theorem swap_y : p.swap.y = p.x := by
   rfl
 
-/-! ### 2. Structural & Algebraic Lemmas (Supporting Dot Notation) -/
+/-! ### 2. Bundled Invariant & Algebraic Lemmas (Supporting Dot Notation) -/
 
-/-- Swapping coordinates twice returns the original point (`p.swap.swap = p`). -/
+/-- Expose the bundled invariant `0 ≤ p.x + p.y` as a dot-notation lemma. -/
+theorem nonneg_sum_coords : 0 ≤ p.x + p.y :=
+  p.nonneg_sum
+
+/-- Swapping coordinates twice returns the original point (`p.swap.swap = p`).
+Thanks to proof irrelevance, `ext` only asks for `.x` and `.y`—not `nonneg_sum`! -/
 @[simp]
 theorem swap_swap : p.swap.swap = p := by
   ext <;> rfl
@@ -61,6 +76,14 @@ theorem add_origin : p.add origin = p := by
 @[simp]
 theorem origin_add : origin.add p = p := by
   ext <;> simp
+
+/-- Adding `0` on the right leaves `p` unchanged (`p + 0 = p`). -/
+theorem add_zero_point : p + 0 = p := by
+  simp
+
+/-- Adding `0` on the left leaves `p` unchanged (`0 + p = p`). -/
+theorem zero_add_point : 0 + p = p := by
+  simp
 
 /-- The squared norm of `origin` is `0`. -/
 @[simp]
