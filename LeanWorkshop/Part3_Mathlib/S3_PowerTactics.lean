@@ -13,11 +13,13 @@ import Mathlib.Tactic.Group
 import Mathlib.Tactic.GCongr
 import Mathlib.Tactic.Push
 import Mathlib.Tactic.Contrapose
+import Mathlib.Tactic.FunProp
+import Mathlib.Topology.Algebra.Ring.Real
 import Aesop
 import Mathlib.Basic.Real.Basic
 
 /-!
-# Part 3.3: Power Tactics in Mathlib
+# Part 3.3: Tactics in Mathlib
 
 After you know the basics (`rw`, `apply`, `exact`, `intro`, `cases`), Mathlib's automation tactics
 eliminate pages of routine algebra, inequality chasing, and logical bookkeeping.
@@ -63,7 +65,8 @@ example (xs : List ℕ) (h : xs = []) : xs.length + 0 = 0 := by
 - `group` proves identities in any (possibly non-commutative) multiplicative group.
 
 Note: `ring`, `abel`, and `group` ignore local hypotheses—first rewrite with `rw [h]` if a
-hypothesis relates the variables!
+hypothesis relates the variables (or use `grind` in Section 6, whose ring solver uses local
+equations automatically)!
 -/
 
 example (x y : ℝ) : (x + y) ^ 2 = x ^ 2 + 2 * x * y + y ^ 2 := by
@@ -78,14 +81,18 @@ example {G : Type*} [Group G] (a b : G) : a * b * b⁻¹ * a⁻¹ = 1 := by
 /-!
 ---
 
-## 3. Linear & Numerical Decision Procedures (`linarith`, `omega`, `norm_num`, `positivity`)
+## 3. Linear & Numerical Decision Procedures
+
+(`linarith`, `omega`, `lia`, `norm_num`, `positivity`)
 
 | Tactic | Domain | Best For |
 | :--- | :--- | :--- |
 | `linarith` | Linear arithmetic over `ℤ`, `ℚ`, `ℝ` | Combining linear inequalities & equations |
 | `omega` | Presburger arithmetic over `ℕ`, `ℤ` | Discrete bounds, `%`, `/`, `ℕ` subtraction |
+| `lia` | Complete LIA over `ℤ`, `ℕ` | Model-based solver (`=`, `≤`, `≠`, `∣`); wraps `grind` |
 | `norm_num` | Concrete numerical expressions | Evaluating `2 ^ 10 = 1024`, fractions, `<` |
 | `positivity` | Sign (`0 < _`, `0 ≤ _`, `_ ≠ 0`) | Combining squares, sums, products, `|x|` |
+
 -/
 
 example {x y : ℝ} (h1 : x + 2 * y ≤ 5) (h2 : 3 * x - y ≤ 1) : 7 * x ≤ 7 := by
@@ -93,6 +100,9 @@ example {x y : ℝ} (h1 : x + 2 * y ≤ 5) (h2 : 3 * x - y ≤ 1) : 7 * x ≤ 7 
 
 example {a b : ℕ} (h : a < b + 1) : a ≤ b := by
   omega
+
+example {x y : ℤ} : 2 * x + 3 * y = 0 → 1 ≤ x → y < 1 := by
+  lia
 
 example : (3 : ℝ) / 4 + 5 / 4 = 2 := by
   norm_num
@@ -103,16 +113,17 @@ example (a b : ℝ) : 0 < a ^ 2 + b ^ 2 + 1 := by
 /-!
 ---
 
-## 4. Structural, Monotonicity & Logic Tactics
+## 4. Extensionality, Monotonicity & Function Properties
 
-(`ext` / `funext`, `gcongr`, `push Not`, `contrapose!`, `aesop`)
+(`ext` / `funext`, `gcongr`, `fun_prop`)
 
 - `funext x` / `ext`: reduces equality of functions or structures to pointwise/fieldwise equality.
 - `gcongr`: "generalized congruence"—peels matching outer operations off `<`, `≤`, or `=` goals
   (e.g. `a + c ≤ b + d` becomes `a ≤ b` and `c ≤ d`).
-- `push Not`: drives `¬` inward across `∀`, `∃`, `∧`, `∨`, `≤`, and `<` (replaces older `push_neg`).
-- `contrapose!` `h`: contraposes a hypothesis `h` with the goal and runs `push Not` on both.
-- `aesop`: white-box proof search combining `intro`, `cases`, `apply`, and `@[aesop]` rules.
+- `fun_prop`: Mathlib's function-property tactic (`Mathlib.Tactic.FunProp`) for goals like
+  `Continuous f`, `Differentiable ℝ f`, `ContDiff`, or `Measurable`. It decomposes composite
+  lambdas into elementary functions tagged `@[fun_prop]` and supports `fun_prop (disch := ...)`
+  for side conditions such as `x ≠ 0`.
 -/
 
 example : (fun x : ℝ ↦ x + 1) = (fun x : ℝ ↦ 1 + x) := by
@@ -122,6 +133,18 @@ example : (fun x : ℝ ↦ x + 1) = (fun x : ℝ ↦ 1 + x) := by
 example {a b c d : ℝ} (hab : a ≤ b) (hcd : c ≤ d) : a + 2 * c ≤ b + 2 * d := by
   gcongr
 
+example : Continuous (fun x : ℝ ↦ x ^ 2 + 3 * x + 1) := by
+  fun_prop
+
+/-!
+---
+
+## 5. Negation & Contraposition (`push Not`, `contrapose!`)
+
+- `push Not`: drives `¬` inward across `∀`, `∃`, `∧`, `∨`, `≤`, and `<` (replaces older `push_neg`).
+- `contrapose!` `h`: contraposes a hypothesis `h` with the goal and runs `push Not` on both.
+-/
+
 example {P : ℕ → Prop} (h : ¬ ∀ n, P n) : ∃ n, ¬ P n := by
   push Not at h
   exact h
@@ -130,13 +153,39 @@ example {x y : ℝ} (h : x ≤ y → x ≤ 5) (hy : 5 < x) : y < x := by
   contrapose! hy
   exact h hy
 
+/-!
+---
+
+## 6. Proof Search & SMT-Style Automation (`aesop`, `grind`)
+
+- `aesop`: white-box best-first proof search combining `intro`, `cases`, `simp`, `apply`, and
+  `@[aesop]` rules.
+- `grind`: Lean 4's modern SMT-inspired tactic ("virtual whiteboard"). Every discovered equality,
+  inequality, or logical fact is shared across cooperating engines:
+  - **Congruence closure**: tracks equalities across function applications (`a = b` gives
+    `f a = f b`).
+  - **E-matching**: instantiates `@[grind]` theorems or extra lemmas passed via `grind [h]`
+    modulo known equalities.
+  - **Case splitting**: splits on `if`/`match`/disjunctions when needed.
+  - **Satellite theory solvers**: runs `lia` (linear integer arithmetic), `ring` (Gröbner bases for
+    commutative rings *including* local hypotheses), and `linarith` (linear ordered modules).
+-/
+
 example (P Q R : Prop) : (P ∧ Q → R) → P → Q → R := by
   aesop
+
+-- `grind` combines congruence closure across function applications:
+example (f : ℕ → ℕ) (a b c : ℕ) (h1 : a = b) (h2 : f b = c) : f a + 1 = c + 1 := by
+  grind
+
+-- Unlike standalone `ring`, `grind`'s ring solver uses local hypotheses directly:
+example (x y : ℝ) (h1 : x + y = 5) (h2 : x - y = 1) : x ^ 2 - y ^ 2 = 5 := by
+  grind
 
 /-!
 ---
 
-## 5. Exercises
+## 7. Exercises
 
 Use the power tactics from this module to solve each goal concisely.
 (Reference solutions are in `LeanWorkshop/Solutions/Part3_Mathlib/S3_PowerTactics.lean`.)
@@ -163,8 +212,17 @@ theorem ex4_gcongr_ineq {a b c : ℝ} (h : a ≤ b) (hc : 0 ≤ c) : a * c + 5 �
 theorem ex5_contrapose {n : ℤ} (h : 3 * n + 1 ≤ 10 → n ≤ 2) (hn : 2 < n) : 10 < 3 * n + 1 := by
   sorry
 
-/-- **Exercise 6:** Solve modular arithmetic on `ℕ` using `omega`. -/
+/-- **Exercise 6:** Solve modular arithmetic on `ℕ` using `omega` or `lia`. -/
 theorem ex6_omega_parity {n : ℕ} (h : n % 2 = 1) : (n + 3) % 2 = 0 := by
+  sorry
+
+/-- **Exercise 7:** Prove continuity of a polynomial function on `ℝ` using `fun_prop`. -/
+theorem ex7_fun_prop_continuous : Continuous (fun x : ℝ ↦ (x - 1) ^ 2 + 5 * x) := by
+  sorry
+
+/-- **Exercise 8:** Combine congruence closure and algebraic hypotheses using `grind`. -/
+theorem ex8_grind_congr (f : ℝ → ℝ) (x y : ℝ) (hxy : x + y = 4) (hf : f 16 = 0) :
+    f ((x + y) ^ 2) = 0 := by
   sorry
 
 end LeanWorkshop.Part3

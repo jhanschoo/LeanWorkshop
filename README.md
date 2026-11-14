@@ -33,7 +33,7 @@ An interactive Lean 4 + Mathlib learning repository covering core Lean fundament
 ### Part 3: Working with Mathlib (`LeanWorkshop/Part3_Mathlib/`)
 - [`S1_FindingThings.lean`](LeanWorkshop/Part3_Mathlib/S1_FindingThings.lean) — `exact?`, `apply?`, `rw?`, `simp?`, Loogle, LeanSearch, LeanExplore, and community resources.
 - [`S2_Nomenclature.lean`](LeanWorkshop/Part3_Mathlib/S2_Nomenclature.lean) — Capitalization conventions, decoding Mathlib lemma names, structural names vs. eponyms, symbol dictionaries, suffixes, and dot notation.
-- [`S3_PowerTactics.lean`](LeanWorkshop/Part3_Mathlib/S3_PowerTactics.lean) — `simp`, `ring`, `abel`, `group`, `linarith`, `omega`, `norm_num`, `positivity`, `ext`, `gcongr`, `push_neg`, and `aesop`.
+- [`S3_PowerTactics.lean`](LeanWorkshop/Part3_Mathlib/S3_PowerTactics.lean) — `simp`, `ring`, `abel`, `group`, `linarith`, `omega`, `lia`, `norm_num`, `positivity`, `ext`, `gcongr`, `fun_prop`, `push_neg`, `aesop`, and `grind`.
 
 ### Part 4: Autoformalization Demo (`LeanWorkshop/Part4_Autoformalization/`)
 - [`S1_StatementTranslation.lean`](LeanWorkshop/Part4_Autoformalization/S1_StatementTranslation.lean) — Natural language / LaTeX to Lean 4 signatures and semantic traps (`ℕ` subtraction/division, coercions).

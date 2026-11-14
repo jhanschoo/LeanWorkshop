@@ -13,6 +13,8 @@ import Mathlib.Tactic.Group
 import Mathlib.Tactic.GCongr
 import Mathlib.Tactic.Push
 import Mathlib.Tactic.Contrapose
+import Mathlib.Tactic.FunProp
+import Mathlib.Topology.Algebra.Ring.Real
 import Aesop
 import Mathlib.Basic.Real.Basic
 
@@ -44,8 +46,17 @@ theorem ex5_contrapose {n : ℤ} (h : 3 * n + 1 ≤ 10 → n ≤ 2) (hn : 2 < n)
   contrapose! hn
   exact h hn
 
-/-- **Exercise 6:** Solve modular arithmetic on `ℕ` using `omega`. -/
+/-- **Exercise 6:** Solve modular arithmetic on `ℕ` using `omega` (or `lia`). -/
 theorem ex6_omega_parity {n : ℕ} (h : n % 2 = 1) : (n + 3) % 2 = 0 := by
   omega
+
+/-- **Exercise 7:** Prove continuity of a polynomial function on `ℝ` using `fun_prop`. -/
+theorem ex7_fun_prop_continuous : Continuous (fun x : ℝ ↦ (x - 1) ^ 2 + 5 * x) := by
+  fun_prop
+
+/-- **Exercise 8:** Combine congruence closure and algebraic hypotheses using `grind`. -/
+theorem ex8_grind_congr (f : ℝ → ℝ) (x y : ℝ) (hxy : x + y = 4) (hf : f 16 = 0) :
+    f ((x + y) ^ 2) = 0 := by
+  grind
 
 end LeanWorkshop.Part3.Solutions
