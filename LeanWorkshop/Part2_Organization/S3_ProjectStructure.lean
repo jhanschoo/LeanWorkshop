@@ -60,16 +60,16 @@ Every Lake project has three configuration files at its root:
 ## 3. Using the `S2_MiniProject` Modules Together (Dot Notation & Instances in Action)
 
 Because `Point2D` and its lemmas live in `namespace LeanWorkshop.Part2.Point2D`, any term
-`p : Point2D` supports **projection (dot) notation** as well as the `Zero` and `Add` instances:
+`p : Point2D α` supports **projection (dot) notation** as well as the `Zero` and `Add` instances:
 - Writing `p.swap` is shorthand for `Point2D.swap p`.
-- Writing `p + 0` uses the `Add Point2D` and `Zero Point2D` typeclass instances.
+- Writing `p + 0` uses the `Add (Point2D α)` and `Zero (Point2D α)` typeclass instances.
 - Writing `p.normSq_swap` is shorthand for `Point2D.normSq_swap p`.
 -/
 
 namespace LeanWorkshop.Part2
 
-/-- A sample lattice point `(3, 4)` satisfying `0 ≤ 3 + 4`. -/
-def samplePoint : Point2D :=
+/-- A sample lattice point `(3, 4)` in `Point2D ℤ` satisfying `0 ≤ 3 + 4`. -/
+def samplePoint : Point2D ℤ :=
   ⟨3, 4, by decide⟩
 
 #eval samplePoint.swap                    -- { x := 4, y := 3, ... }
@@ -77,11 +77,12 @@ def samplePoint : Point2D :=
 #eval (samplePoint + ⟨1, -1, by decide⟩)  -- { x := 4, y := 3, ... }
 
 -- Using dot notation, typeclass instances, and `@[simp]` lemmas from `S2_Lemmas.lean`:
-example (p : Point2D) : (p + 0).swap.swap = p := by
+example {α : Type*} [AddCommMonoid α] [Preorder α] [IsOrderedAddMonoid α] (p : Point2D α) :
+    (p + 0).swap.swap = p := by
   simp
 
-example (p : Point2D) : p.swap.normSq = p.normSq :=
-  -- Dot notation applies `Point2D.normSq_swap` directly to `p : Point2D`!
+example {α : Type*} [Semiring α] [Preorder α] (p : Point2D α) : p.swap.normSq = p.normSq :=
+  -- Dot notation applies `Point2D.normSq_swap` directly to `p : Point2D α`!
   p.normSq_swap
 
 /-!
@@ -96,27 +97,29 @@ Replace each `sorry` below with a valid definition or proof using the `Point2D` 
 
 namespace Point2D
 
-/-- **Exercise 1a:** Define diagonal shift `shiftDiag (n : ℕ) (p : Point2D)` that adds `(n : ℤ)`
-to both coordinates of `p`.
-Hint: Construct the result with `⟨p.x + n, p.y + n, by ...⟩` and prove the invariant using
-`have := p.nonneg_sum; omega`. -/
-def shiftDiag (n : ℕ) (p : Point2D) : Point2D :=
+variable {α : Type*} [AddCommMonoid α] [Preorder α] [IsOrderedAddMonoid α]
+
+/-- **Exercise 1a:** Define diagonal shift `shiftDiag (c : α) (hc : 0 ≤ c) (p : Point2D α)` that
+adds `c` to both coordinates of `p`.
+Hint: Construct the result with `⟨p.x + c, p.y + c, by ...⟩` and prove the invariant using
+`rw [add_add_add_comm]; exact add_nonneg p.nonneg_sum (add_nonneg hc hc)`. -/
+def shiftDiag (c : α) (hc : 0 ≤ c) (p : Point2D α) : Point2D α :=
   sorry
 
 /-- **Exercise 1b:** Prove that shifting `p` by `0` returns `p`.
 Hint: Use `ext <;> simp [shiftDiag]`, noting that proof irrelevance handles `nonneg_sum`
 automatically! -/
-theorem shiftDiag_zero (p : Point2D) : shiftDiag 0 p = p := by
+theorem shiftDiag_zero (p : Point2D α) : shiftDiag 0 le_rfl p = p := by
   sorry
 
 /-- **Exercise 2:** Prove that componentwise addition `p + q` is commutative.
-Hint: Start with `ext`, then simplify with `simp [Int.add_comm]`. -/
-theorem add_comm_point (p q : Point2D) : p + q = q + p := by
+Hint: Start with `ext`, then simplify with `simp [add_comm]`. -/
+theorem add_comm_point (p q : Point2D α) : p + q = q + p := by
   sorry
 
 /-- **Exercise 3:** Prove that swapping coordinates distributes over `+`.
 Hint: `ext <;> simp` uses the `@[simp]` lemmas from `S2_Lemmas.lean` on both coordinates! -/
-theorem swap_add (p q : Point2D) : (p + q).swap = p.swap + q.swap := by
+theorem swap_add (p q : Point2D α) : (p + q).swap = p.swap + q.swap := by
   sorry
 
 end Point2D
