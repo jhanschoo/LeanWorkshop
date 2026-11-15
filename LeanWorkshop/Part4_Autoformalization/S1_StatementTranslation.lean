@@ -76,12 +76,20 @@ theorem nat_half_add_half_of_even {a : ℕ} (h_even : 2 ∣ a) : a / 2 + a / 2 =
 /-!
 ---
 
-## Example 3: Coercions (`↑`) & Implicit Domain Hypotheses
+## Example 3: Coercions (`↑`), Unpacked Binders, & Implicit Domain Hypotheses
 
-Informal prose frequently leaves domain assumptions implicit:
-- *"Let $p$ be prime"* → `(hp : Nat.Prime p)`
-- *"For any positive real $x$"* → `(hx : 0 < x)`
-- *"Let $n \ge 1$ be an integer"* → `(n : ℤ) (hn : 1 ≤ n)`
+Formalizing informal statements involves two distinct binder patterns:
+1. **Unpacking prose modifiers into `(type) + (hypothesis)` binders:** Informal English bundles
+   domain restrictions into adjectives instead of separate types like `ℝ_{>0}` or `ℤ_{≥1}`:
+   - *"For any positive real $x$"* → `(x : ℝ) (hx : 0 < x)`
+   - *"Let $n \ge 1$ be an integer"* → `(n : ℤ) (hn : 1 ≤ n)`
+2. **Supplying genuinely implicit domain assumptions** that informal prose omits:
+   - *"Let $p$ be prime"* → implicitly `ℕ` (`(p : ℕ) (hp : Nat.Prime p)`, so `2 ≤ p`); over `ℤ`,
+     `-2` is also a prime element!
+   - *"Let $a_1, \dots, a_n$..."* (or $\max_{1 \le i \le n} a_i$) → implicitly `(hn : 1 ≤ n)` so
+     the index range is nonempty.
+   - Expressions like $\frac{a}{b}$, $\sqrt{x}$, or $\log x$ → implicitly `b ≠ 0`, `0 ≤ x`,
+     or `0 < x` (Lean's totalized operations won't enforce these on their own).
 
 When mixing `ℕ`, `ℤ`, and `ℝ` in one formula, Lean inserts coercions (`↑n`, printed in the
 Infoview). Lemmas like `Nat.cast_le` (`(m : ℝ) ≤ (n : ℝ) ↔ m ≤ n`) bridge between `ℕ` inequalities
