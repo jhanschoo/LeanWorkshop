@@ -18,12 +18,14 @@ import Mathlib.Data.Nat.Prime.Basic
 Autoformalization translates informal mathematics (LaTeX or natural language) into formal Lean 4
 definitions, theorem statements, and proofs—verified by Lean's trusted kernel.
 
-The **hardest and most error-prone step** is not writing tactics; it is making sure the formal
-statement accurately captures the *intended* mathematical meaning.
+An **error-prone step** is in making sure the formal
+statement accurately captures the *intended* mathematical meaning. Subtle semantic differences
+between informal conventions and Mathlib definitions occur across every area of mathematics.
+We exhibit some **examples** below.
 
 ---
 
-## 1. Semantic Trap 1: Truncated Subtraction on `ℕ`
+## Example 1: Truncated Subtraction on `ℕ`
 
 In Lean, subtraction on `ℕ` is **truncated at zero**: `2 - 5 = 0`.
 Therefore, a naive translation of:
@@ -54,7 +56,7 @@ theorem int_sub_eq_imp_eq_add {a b c : ℤ} (h : a - b = c) : a = b + c := by
 /-!
 ---
 
-## 2. Semantic Trap 2: Integer Division Truncation
+## Example 2: Integer Division Truncation
 
 Similarly, `a / b` on `ℕ` and `ℤ` truncates toward zero: `(5 : ℕ) / 2 = 2`.
 - Over `ℕ`, `a / 2 + a / 2 = a` is **false** for odd `a` (`5 / 2 + 5 / 2 = 4 ≠ 5`).
@@ -73,7 +75,7 @@ theorem nat_half_add_half_of_even {a : ℕ} (h_even : 2 ∣ a) : a / 2 + a / 2 =
 /-!
 ---
 
-## 3. Semantic Trap 3: Coercions (`↑`) & Implicit Domain Hypotheses
+## Example 3: Coercions (`↑`) & Implicit Domain Hypotheses
 
 Informal prose frequently leaves domain assumptions implicit:
 - *"Let $p$ be prime"* → `(hp : Nat.Prime p)`
@@ -96,9 +98,56 @@ theorem two_le_of_prime {p : ℕ} (hp : Nat.Prime p) : 2 ≤ p :=
 /-!
 ---
 
-## 4. Exercises
+## 4. Discovering and Auditing Semantic Misalignments in Mathlib
 
-Each formal statement below has already been rescued from semantic traps. Complete the proofs!
+Two of the misalignments above come
+from **totalization** and **boundary conventions**. Because every function in Lean must be total,
+operations that are informally partial (undefined on certain inputs) are extended in Mathlib with a
+convenient default ("junk") value outside their natural domain:
+- `a / 0 = 0` on `ℕ`, `ℤ`, `ℚ`, `ℝ`
+- `a - b = 0` on `ℕ` when `a ≤ b`
+- `Real.sqrt x = 0` for `x < 0`
+- `deriv f x = 0` when `f` is not differentiable at `x`
+- `sSup s` / `sInf s` return a default value when `s : Set ℝ` is empty or unbounded
+
+To check whether an unfamiliar Mathlib definition might be misaligned with your informal intent:
+
+1. **Jump to the definition & read "Implementation notes" (`F12` / hover / `#print`):**
+   Press `F12` on any symbol in VS Code to open its Mathlib file. Module headers and docstrings
+   usually spell out edge-case conventions and why a totalization choice was made.
+2. **Inspect the hypotheses of surrounding API lemmas (`#check`):**
+   Look at the theorems proved right next to the definition. Extra hypotheses—such as `b ≤ a` in
+   `Nat.sub_add_cancel`, `y ≠ 0` in `div_mul_cancel₀`, `0 ≤ x` in `Real.sq_sqrt`, or
+   `DifferentiableAt ℝ f x` in derivative rules—reveal the exact domain where the usual
+   mathematical behavior holds.
+3. **Probe degenerate and out-of-domain inputs (`#eval`, `norm_num`, `simp`):**
+   Evaluate or simplify the expression on `0`, `1`, negative numbers, `∅`, or discontinuous
+   functions to see directly what the definition returns outside the intended domain.
+4. **Try to refute your statement on boundary cases before proving it:**
+   Before investing effort in a proof of `∀ x, P x`, check if `x = 0`, `x < 0`, or `s = ∅` gives a
+   quick counterexample (`¬ ∀ x, P x`). You can also use property-based testing (`plausible`) or
+   ask an LLM to look for degenerate counterexamples.
+5. **Prove a sanity-check corollary (guard against vacuity):**
+   Even if a statement compiles and is provable, missing or contradictory hypotheses can make it
+   vacuously true. Specialize your theorem to a concrete non-trivial case to confirm it actually
+   says something meaningful.
+-/
+
+-- Because `(x : ℝ) / 0 = 0` by totalization, `x / y * y = x` fails at `y = 0`:
+example : ¬ (∀ x y : ℝ, x / y * y = x) := by
+  intro h
+  have h1 : (1 : ℝ) / 0 * 0 = 1 := h 1 0
+  linarith
+
+-- Inspecting Mathlib's cancellation lemma reveals the required domain guard `y ≠ 0`:
+#check div_mul_cancel₀
+
+/-!
+---
+
+## 5. Exercises
+
+Each formal statement below has been aligned with Lean's semantics. Complete the proofs!
 (Reference solutions are in
 `LeanWorkshop/Solutions/Part4_Autoformalization/S1_StatementTranslation.lean`.)
 -/
