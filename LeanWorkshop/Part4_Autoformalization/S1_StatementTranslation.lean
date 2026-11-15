@@ -6,11 +6,13 @@ Authors: Johannes Choo <jhanschoo@gmail.com>
 import Mathlib.Tactic.Basic
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.NormNum
 import Mathlib.Tactic.Use
 import Mathlib.Basic.Real.Basic
 import Mathlib.Data.Int.Basic
 import Mathlib.Algebra.Order.Ring.Int
 import Mathlib.Data.Nat.Prime.Basic
+import Mathlib.Order.Monotone.Basic
 
 /-!
 # Part 4.1: Statement Translation (Autoformalization)
@@ -98,7 +100,29 @@ theorem two_le_of_prime {p : ℕ} (hp : Nat.Prime p) : 2 ≤ p :=
 /-!
 ---
 
-## 4. Discovering and Auditing Semantic Misalignments in Mathlib
+## Example 4: Definition Alignment Beyond Arithmetic (`Monotone` vs. `StrictMono`)
+
+Semantic drift also comes from choosing a Mathlib definition that is weaker (or stronger) than the
+informal term. In informal analysis, *"increasing"* often means $x < y \implies f(x) < f(y)$
+(which implies injectivity), whereas Mathlib's `Monotone` only requires $x \le y \implies f(x) \le
+f(y)$ and holds for constant functions! Whenever you mean strictly increasing, use `StrictMono`.
+-/
+
+/-- Constant functions satisfy `Monotone`, so `Monotone` does not imply injectivity. -/
+example : ¬ (∀ f : ℝ → ℝ, Monotone f → Function.Injective f) := by
+  intro h
+  have h_inj : Function.Injective (fun _ : ℝ ↦ (0 : ℝ)) := h _ monotone_const
+  have h_eq : (0 : ℝ) = 1 := h_inj rfl
+  norm_num at h_eq
+
+/-- Under `StrictMono`, functions are injective (`hf.injective`). -/
+theorem strictMono_injective {f : ℝ → ℝ} (hf : StrictMono f) : Function.Injective f :=
+  hf.injective
+
+/-!
+---
+
+## 5. Discovering and Auditing Semantic Misalignments in Mathlib
 
 Two of the misalignments above come
 from **totalization** and **boundary conventions**. Because every function in Lean must be total,
@@ -145,31 +169,41 @@ example : ¬ (∀ x y : ℝ, x / y * y = x) := by
 /-!
 ---
 
-## 5. Exercises
+## 6. Exercises: Auditing & Repairing Statement Translations
 
-Each formal statement below has been aligned with Lean's semantics. Complete the proofs!
-(Reference solutions are in
+Practice refuting naive translations, inspecting Mathlib domain guards (`#check`), and running
+sanity instantiations. (Reference solutions are in
 `LeanWorkshop/Solutions/Part4_Autoformalization/S1_StatementTranslation.lean`.)
 -/
 
-/-- **Exercise 1:** Informally: *"If $b \le a$ in $\mathbb{N}$, then $(a - b) + b = a$."* -/
-theorem ex1_nat_sub_cancel {a b : ℕ} (h : b ≤ a) : a - b + b = a := by
+/-- **Exercise 1a (Refute):** Naive `ℕ` translation of *"$(a - b) + b = a$ for all naturals"*
+is false! Exhibit a counterexample. -/
+theorem ex1a_refute_naive_sub : ¬ (∀ a b : ℕ, a - b + b = a) := by
   sorry
 
-/-- **Exercise 2:** Informally: *"The midpoint $(x+y)/2$ lies between $x$ and $y$ in $\mathbb{R}$."*
--/
-theorem ex2_real_average {x y : ℝ} (h : x ≤ y) :
-    x ≤ (x + y) / 2 ∧ (x + y) / 2 ≤ y := by
+/-- **Exercise 1b (Repair):** With the domain guard `b ≤ a`, prove the repaired identity. -/
+theorem ex1b_nat_sub_cancel {a b : ℕ} (h : b ≤ a) : a - b + b = a := by
   sorry
 
-/-- **Exercise 3:** Informally: *"The square of an odd integer $n = 2k + 1$ is odd."* -/
-theorem ex3_odd_square {n : ℤ} (k : ℤ) (hn : n = 2 * k + 1) :
-    ∃ m : ℤ, n ^ 2 = 2 * m + 1 := by
+/-- **Exercise 2a (Refute):** Naive `ℝ` translation of *"$x / y = z \implies x = z \cdot y$"* is
+false because `(x : ℝ) / 0 = 0`! Exhibit a counterexample. -/
+theorem ex2a_refute_naive_div : ¬ (∀ x y z : ℝ, x / y = z → x = z * y) := by
   sorry
 
-/-- **Exercise 4:** Informally: *"If $m \le n$ in $\mathbb{N}$, then $m + 1 \le n + 1$ in
-$\mathbb{R}$."* -/
-theorem ex4_coercion_mono {m n : ℕ} (h : m ≤ n) : (m : ℝ) + 1 ≤ (n : ℝ) + 1 := by
+/-- **Exercise 2b (Discover guard & prove):** Repair Exercise 2a with `y ≠ 0` and prove it
+(hint: check `#check div_mul_cancel₀`). -/
+theorem ex2b_div_eq_mul {x y z : ℝ} (hy : y ≠ 0) (h : x / y = z) : x = z * y := by
+  sorry
+
+/-- **Exercise 2c (Sanity instantiation):** Instantiate `ex2b_div_eq_mul` on `x = 6, y = 3, z = 2`
+to confirm the hypotheses are non-vacuous. -/
+theorem ex2c_div_sanity : (6 : ℝ) = 2 * 3 := by
+  sorry
+
+/-- **Exercise 3 (Definition alignment):** Using `StrictMono`, prove that `f x = f y → x = y`.
+Notice this would be false if `StrictMono` were mistakenly translated as `Monotone`! -/
+theorem ex3_strictMono_eq_imp_eq {f : ℝ → ℝ} (hf : StrictMono f) {x y : ℝ}
+    (h : f x = f y) : x = y := by
   sorry
 
 end LeanWorkshop.Part4

@@ -18,17 +18,26 @@ section BasicAPI
 
 variable (T : ContractionMap)
 
-/-- **Exercise 1:** Prove the two-step contraction bound using `T.dist_fixed_step` and `gcongr`. -/
-lemma ex1_dist_two_steps (x : ℝ) {x_star : ℝ} (h_fix : T.IsFixedPt x_star) :
-    |T.toFun (T.toFun x) - x_star| ≤ T.factor ^ 2 * |x - x_star| := by
-  have h1 : |T.toFun (T.toFun x) - x_star| ≤ T.factor * |T.toFun x - x_star| :=
-    T.dist_fixed_step (T.toFun x) h_fix
-  have h2 : |T.toFun x - x_star| ≤ T.factor * |x - x_star| :=
-    T.dist_fixed_step x h_fix
-  have h_mul : T.factor * |T.toFun x - x_star| ≤ T.factor * (T.factor * |x - x_star|) := by
-    have := T.factor_nonneg
+/-- **Exercise 1a:** Prove the Lipschitz bound for composing two contractions via `gcongr`. -/
+lemma ex1a_comp_lip (T₁ T₂ : ContractionMap) (x y : ℝ) :
+    |T₁.toFun (T₂.toFun x) - T₁.toFun (T₂.toFun y)| ≤ (T₁.factor * T₂.factor) * |x - y| := by
+  have h1 : |T₁.toFun (T₂.toFun x) - T₁.toFun (T₂.toFun y)| ≤
+      T₁.factor * |T₂.toFun x - T₂.toFun y| := T₁.lip (T₂.toFun x) (T₂.toFun y)
+  have h2 : |T₂.toFun x - T₂.toFun y| ≤ T₂.factor * |x - y| := T₂.lip x y
+  have h3 : T₁.factor * |T₂.toFun x - T₂.toFun y| ≤
+      T₁.factor * (T₂.factor * |x - y|) := by
+    have := T₁.factor_nonneg
     gcongr
-  linarith [sq T.factor]
+  linarith
+
+/-- **Exercise 1b:** Specialize `ex1a_comp_lip` to `T` and `x_star` to deduce the two-step bound.
+-/
+lemma ex1b_dist_two_steps (x : ℝ) {x_star : ℝ} (h_fix : T.IsFixedPt x_star) :
+    |T.toFun (T.toFun x) - x_star| ≤ T.factor ^ 2 * |x - x_star| := by
+  have h_comp := ex1a_comp_lip T T x x_star
+  have h_fix' : T.toFun x_star = x_star := h_fix
+  rw [h_fix', h_fix', ← sq T.factor] at h_comp
+  exact h_comp
 
 /-- **Exercise 2:** Combine `T.dist_fixed_step` and `T.slack_mul_dist_le_residual`. -/
 lemma ex2_slack_mul_dist_next_le (x : ℝ) {x_star : ℝ} (h_fix : T.IsFixedPt x_star) :

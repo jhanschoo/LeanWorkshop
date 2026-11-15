@@ -8,6 +8,7 @@ import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
 import Mathlib.Tactic.Positivity
+import Mathlib.Tactic.GCongr
 import Mathlib.Order.Monotone.Basic
 import Mathlib.Basic.Real.Basic
 
@@ -41,10 +42,11 @@ vacuously, or slipping in `axiom` / `sorryAx`.
 
 namespace LeanWorkshop.Part4
 
-/-- Spec drift / vacuous hypothesis bug: `hx1` and `hx2` are contradictory, so `linarith`
-"proves" an absurd conclusion (`x ^ 2 < 0`) with zero compiler warnings! -/
-theorem vacuous_bound_bad {x : ℝ} (hx1 : 1 < x) (hx2 : x < 1) : x ^ 2 < 0 := by
-  linarith
+/-- Realistic vacuity trap: an agent drops the `x + 1 ≤ y` guard when translating
+"if `x + 1 ≤ y` then `f x + 1 ≤ f y`". Setting `x = 0, y = 0` yields `f 0 + 1 ≤ f 0`,
+so `linarith` "proves" `f 0 = f 1` vacuously with zero compiler warnings! -/
+theorem step_bound_vacuous (f : ℝ → ℝ) (h : ∀ x y : ℝ, f x + 1 ≤ f y) : f 0 = f 1 := by
+  linarith [h 0 0]
 
 /-- Non-vacuous target theorem: `2 * x ≤ x ^ 2` whenever `2 ≤ x`. -/
 theorem two_mul_le_sq {x : ℝ} (hx : 2 ≤ x) : 2 * x ≤ x ^ 2 := by
@@ -106,14 +108,38 @@ theorem poly_pos_quarter (x : ℝ) : 3 / 4 ≤ x ^ 2 - x + 1 := by
 
 ## 4. Failure Mode 4: Brittle "Spaghetti Proofs" vs. Modular Structure
 
-Even when a theorem statement is right, agents can emit sprawling 100-line tactic blocks full of
-non-terminal `simp` calls and raw `rw` chains that break on the next Mathlib bump.
+Even when a theorem statement is right, agents can emit sprawling tactic blocks full of
+manual `have` chains, non-terminal `simp` calls, and raw `rw` chains that break on Mathlib bumps.
 
 - **Fix:**
   - Extract reusable facts into standalone `lemma`s inside a `namespace`/`section` (as in 4.2).
   - Replace non-terminal `simp` with `simp only [...]` (via `simp?`).
   - Prefer `calc`, `gcongr`, `fun_prop`, `grind`, and `positivity` over fragile manual rewrites.
+-/
 
+/-- Verbose, brittle proof emitted by an unguided agent: manual factoring and `rw` chains. -/
+theorem quad_mono_spaghetti {a b : ℝ} (ha : 0 ≤ a) (hab : a ≤ b) :
+    2 * a ^ 2 + a ≤ 2 * b ^ 2 + b := by
+  have hb : 0 ≤ b := le_trans ha hab
+  have h_sub : 0 ≤ b - a := sub_nonneg.mpr hab
+  have h_sum : 0 ≤ b + a := add_nonneg hb ha
+  have h_mul : 0 ≤ (b - a) * (b + a) := mul_nonneg h_sub h_sum
+  have h_sq : a ^ 2 ≤ b ^ 2 := by
+    have h_diff : b ^ 2 - a ^ 2 = (b - a) * (b + a) := by ring
+    linarith
+  have h_two : 2 * a ^ 2 ≤ 2 * b ^ 2 := by
+    rw [← sub_nonneg]
+    have h_fac : 2 * b ^ 2 - 2 * a ^ 2 = 2 * (b ^ 2 - a ^ 2) := by ring
+    rw [h_fac]
+    exact mul_nonneg (by norm_num) (sub_nonneg.mpr h_sq)
+  exact add_le_add h_two hab
+
+/-- Modular refactored proof: `gcongr` handles powers and linear combinations cleanly. -/
+theorem quad_mono_clean {a b : ℝ} (ha : 0 ≤ a) (hab : a ≤ b) :
+    2 * a ^ 2 + a ≤ 2 * b ^ 2 + b := by
+  gcongr
+
+/-!
 ---
 
 ## 5. Exercises
@@ -134,13 +160,20 @@ theorem ex2_use_mathlib_monotone {f g : ℝ → ℝ} (hf : Monotone f) (hg : Mon
     Monotone (fun x ↦ f (g x) + f x) := by
   sorry
 
-/-- **Exercise 3 (Sanity-Check Against Vacuity):** Prove `ex3_avg_ge_min` and then instantiate it
-on `a = 3, b = 7` in `ex3_sanity_check` to verify the hypotheses are satisfiable. -/
-theorem ex3_avg_ge_min {a b : ℝ} (hab : a ≤ b) : a ≤ (a + b) / 2 := by
+/-- **Exercise 3a (Refute Vacuous Hypothesis):** Show that no function `f : ℝ → ℝ` satisfies the
+unguarded hypothesis from `step_bound_vacuous`. -/
+theorem ex3a_vacuous_hyp_impossible : ¬ (∃ f : ℝ → ℝ, ∀ x y : ℝ, f x + 1 ≤ f y) := by
   sorry
 
-/-- Concrete instantiation sanity check for `ex3_avg_ge_min`. -/
-theorem ex3_sanity_check : (3 : ℝ) ≤ (3 + 7) / 2 := by
+/-- **Exercise 3b (Repair Statement):** Restore the `x + 1 ≤ y` guard and prove `f 0 + 2 ≤ f 2`.
+-/
+theorem ex3b_step_bound_fixed (f : ℝ → ℝ) (h : ∀ x y : ℝ, x + 1 ≤ y → f x + 1 ≤ f y) :
+    f 0 + 2 ≤ f 2 := by
+  sorry
+
+/-- **Exercise 3c (Sanity Instantiation):** Instantiate `ex3b_step_bound_fixed` on `id` to
+verify the repaired hypothesis is satisfiable. -/
+theorem ex3c_step_bound_sanity : (0 : ℝ) + 2 ≤ 2 := by
   sorry
 
 end LeanWorkshop.Part4

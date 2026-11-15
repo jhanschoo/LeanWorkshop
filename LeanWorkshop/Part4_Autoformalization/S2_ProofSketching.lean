@@ -71,9 +71,18 @@ def slack (T : ContractionMap) : ℝ :=
 
 ## 2. Stage 2 & 3: Top-Down Lemma Outlining, Revision, and Fleshing Out
 
-In a real development, you first write the dependency graph below with `sorry` in `slack_pos`,
-`dist_fixed_step`, and `slack_mul_dist_le_residual`, and verify that `fixedPt_unique` compiles
-from those signatures alone.
+In Stage 2, you first write the helper signatures with `:= by sorry` and prove `fixedPt_unique`
+from those stubs alone, checking that binders and dependency flow compile before any helper proofs:
+
+```lean
+lemma slack_pos : 0 < T.slack := by sorry
+lemma dist_fixed_step (x : ℝ) {x_star : ℝ} (h_fix : T.IsFixedPt x_star) :
+    |T.toFun x - x_star| ≤ T.factor * |x - x_star| := by sorry
+lemma slack_mul_dist_le_residual (x : ℝ) {x_star : ℝ} (h_fix : T.IsFixedPt x_star) :
+    T.slack * |x - x_star| ≤ |x - T.toFun x| := by sorry
+
+theorem fixedPt_unique {x_star y_star : ℝ} ... := by ... -- proved using the stubs above!
+```
 
 Outlining early also exposes **statement revisions** before any proof effort is wasted:
 - **Cleared denominators vs. division:** Writing `T.slack * |x - x_star| ≤ |x - T.toFun x|`
@@ -83,7 +92,7 @@ Outlining early also exposes **statement revisions** before any proof effort is 
   `x_star` (which can be `{x_star : ℝ}` implicit) but does not mention `x`. Keeping `(x : ℝ)`
   explicit lets callers write `T.dist_fixed_step x h_fix` cleanly without unresolved metavariables.
 
-Below is the fleshed-out, `sorry`-free `BasicAPI` section using shared
+Below is the Stage 3 fleshed-out, `sorry`-free `BasicAPI` section using shared
 `variable (T : ContractionMap)`.
 -/
 
@@ -144,17 +153,17 @@ Notice that these exercises live inside `section BasicAPI` and `namespace Contra
 `LeanWorkshop/Solutions/Part4_Autoformalization/S2_ProofSketching.lean`.)
 -/
 
-/-- **Exercise 1:** Prove the two-step contraction bound for `T.toFun (T.toFun x)`.
-Hint: Complete the pre-outlined `have` steps using `T.dist_fixed_step` and `gcongr`. -/
-lemma ex1_dist_two_steps (x : ℝ) {x_star : ℝ} (h_fix : T.IsFixedPt x_star) :
+/-- **Exercise 1a (Helper lemma):** Prove the Lipschitz bound for composing two contraction maps.
+Notice how factoring this out keeps downstream two-step bounds clean. -/
+lemma ex1a_comp_lip (T₁ T₂ : ContractionMap) (x y : ℝ) :
+    |T₁.toFun (T₂.toFun x) - T₁.toFun (T₂.toFun y)| ≤ (T₁.factor * T₂.factor) * |x - y| := by
+  sorry
+
+/-- **Exercise 1b (Deduce from helper):** Prove the two-step contraction bound for
+`T.toFun (T.toFun x)` using either `ex1a_comp_lip T T` or `T.dist_fixed_step` + `gcongr`. -/
+lemma ex1b_dist_two_steps (x : ℝ) {x_star : ℝ} (h_fix : T.IsFixedPt x_star) :
     |T.toFun (T.toFun x) - x_star| ≤ T.factor ^ 2 * |x - x_star| := by
-  have h1 : |T.toFun (T.toFun x) - x_star| ≤ T.factor * |T.toFun x - x_star| := by
-    sorry
-  have h2 : |T.toFun x - x_star| ≤ T.factor * |x - x_star| := by
-    sorry
-  have h_mul : T.factor * |T.toFun x - x_star| ≤ T.factor * (T.factor * |x - x_star|) := by
-    sorry
-  linarith [sq T.factor]
+  sorry
 
 /-- **Exercise 2:** Prove the one-step-ahead residual bound
 `T.slack * |T.toFun x - x_star| ≤ T.factor * |x - T.toFun x|`
