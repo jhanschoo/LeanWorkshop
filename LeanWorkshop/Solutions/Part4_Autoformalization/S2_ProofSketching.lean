@@ -6,10 +6,13 @@ Authors: Johannes Choo <jhanschoo@gmail.com>
 import LeanWorkshop.Part4_Autoformalization.S2_ProofSketching
 
 /-!
-# Solutions for Part 4.2: Outlining and Incremental Formalization
+# Solutions — Part 4.2: Outlining and Incremental Formalization
+
+Complete, `sorry`-free reference solutions for
+`LeanWorkshop.Part4_Autoformalization.S2_ProofSketching`.
 -/
 
-namespace LeanWorkshop.Part4.Solutions
+namespace LeanWorkshop.Solutions.Part4
 
 open LeanWorkshop.Part4
 open ContractionMap
@@ -64,4 +67,4 @@ theorem ex3_halfShift_unique_fixedPt {y_star : ℝ} (hy : halfShift.IsFixedPt y_
 
 end BasicAPI
 
-end LeanWorkshop.Part4.Solutions
+end LeanWorkshop.Solutions.Part4

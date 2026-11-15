@@ -33,7 +33,7 @@ An interactive Lean 4 + Mathlib learning repository covering core Lean fundament
 ### Part 3: Working with Mathlib (`LeanWorkshop/Part3_Mathlib/`)
 - [`S1_FindingThings.lean`](LeanWorkshop/Part3_Mathlib/S1_FindingThings.lean) — `exact?`, `apply?`, `rw?`, `simp?`, Loogle, LeanSearch, LeanExplore, and community resources.
 - [`S2_Nomenclature.lean`](LeanWorkshop/Part3_Mathlib/S2_Nomenclature.lean) — Capitalization conventions, decoding Mathlib lemma names, structural names vs. eponyms, symbol dictionaries, suffixes, and dot notation.
-- [`S3_PowerTactics.lean`](LeanWorkshop/Part3_Mathlib/S3_PowerTactics.lean) — `simp`, `ring`, `abel`, `group`, `linarith`, `omega`, `lia`, `norm_num`, `positivity`, `ext`, `gcongr`, `fun_prop`, `push_neg`, `aesop`, and `grind`.
+- [`S3_PowerTactics.lean`](LeanWorkshop/Part3_Mathlib/S3_PowerTactics.lean) — `simp`, `ring`, `abel`, `group`, `linarith`, `omega`, `lia`, `norm_num`, `positivity`, `ext`, `gcongr`, `fun_prop`, `push Not`, `aesop`, and `grind`.
 
 ### Part 4: Autoformalization Demo (`LeanWorkshop/Part4_Autoformalization/`)
 - [`S1_StatementTranslation.lean`](LeanWorkshop/Part4_Autoformalization/S1_StatementTranslation.lean) — Natural language / LaTeX to Lean 4 signatures and semantic traps (`ℕ` subtraction/division, coercions).
@@ -55,13 +55,15 @@ All modules are imported from the root barrel file [`LeanWorkshop.lean`](LeanWor
 ## Community Resources & Tutorials
 
 - **Books & Interactive Tutorials**
+  - [*Glimpse of Lean*](https://github.com/PatrickMassot/GlimpseOfLean) — Recommended concise, hands-on introduction to proving mathematics in Lean 4.
   - [*Mathematics in Lean*](https://leanprover-community.github.io/mathematics_in_lean/) — Hands-on introduction to proving mathematics with Mathlib.
   - [*Theorem Proving in Lean 4*](https://lean-lang.org/theorem_proving_in_lean4/) — Official guide to Lean 4's type theory and tactic language.
   - [*The Natural Number Game*](https://adam.math.hhu.de/#/g/leanprover-community/nng4) — Browser-based interactive introduction to Lean tactics.
 - **Search & Documentation**
   - [Mathlib4 Documentation](https://leanprover-community.github.io/mathlib4_docs/) — Browsable API docs for all of Mathlib.
   - [Loogle](https://loogle.lean-lang.org/) — Type- and pattern-based search across Lean & Mathlib.
-  - [Moogle](https://www.moogle.ai/) & [LeanSearch](https://leansearch.net/) — Natural-language semantic search for Mathlib theorems.
+  - [LeanSearch](https://leansearch.net/) — Natural-language semantic search for Mathlib theorems.
+  - [LeanExplore](https://www.leanexplore.com/) — Hybrid semantic + ecosystem search across `Mathlib`, `Batteries`, `Std`, `PhysLean`, etc.
   - [Lean Reservoir](https://reservoir.lean-lang.org/) — Index of Lean 4 packages and projects.
 - **Community**
   - [Lean Zulip Chat](https://leanprover.zulipchat.com/) — Main community forum (especially `#new members` and `#mathlib4`).

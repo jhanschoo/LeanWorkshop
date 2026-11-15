@@ -7,7 +7,6 @@ import Mathlib.Tactic.Basic
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.Use
 import Mathlib.Basic.Real.Basic
 import Mathlib.Data.Int.Basic
 import Mathlib.Algebra.Order.Ring.Int
@@ -15,10 +14,13 @@ import Mathlib.Data.Nat.Prime.Basic
 import Mathlib.Order.Monotone.Basic
 
 /-!
-# Solutions for Part 4.1: Statement Translation (Autoformalization)
+# Solutions — Part 4.1: Statement Translation (Autoformalization)
+
+Complete, `sorry`-free reference solutions for
+`LeanWorkshop.Part4_Autoformalization.S1_StatementTranslation`.
 -/
 
-namespace LeanWorkshop.Part4.Solutions
+namespace LeanWorkshop.Solutions.Part4
 
 /-- **Exercise 1a:** Refute naive `ℕ` subtraction cancellation with `a = 2, b = 5`. -/
 theorem ex1a_refute_naive_sub : ¬ (∀ a b : ℕ, a - b + b = a) := by
@@ -49,4 +51,4 @@ theorem ex3_strictMono_eq_imp_eq {f : ℝ → ℝ} (hf : StrictMono f) {x y : �
     (h : f x = f y) : x = y :=
   hf.injective h
 
-end LeanWorkshop.Part4.Solutions
+end LeanWorkshop.Solutions.Part4

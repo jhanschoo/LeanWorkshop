@@ -79,12 +79,19 @@ Once you know or guess a lemma name, inspect its exact signature and implementat
 When the lemma you need is not yet imported in your file—or you only know its mathematical idea—use
 these search tools:
 
-| Tool | Best For | Example Query / URL |
+| Tool | Best For | Usage & Example |
 | :--- | :--- | :--- |
-| **Loogle** | Type / pattern search | `https://loogle.lean-lang.org` (or `#loogle` in-editor) — `?a + ?b = ?b + ?a`, `List ?a → List (List ?a)` |
-| **LeanSearch** | Natural language queries | `https://leansearch.net` (or `#leansearch "..."` in-editor) — `"sum of first n naturals"` |
-| **LeanExplore** | Hybrid semantic + ecosystem search | `https://www.leanexplore.com` (web, Python API, MCP) — searches `Mathlib`, `Batteries`, `Std`, `PhysLean`, etc. |
-| **Mathlib4 Docs** | API & module browsing | `https://leanprover-community.github.io/mathlib4_docs/` |
+| **Loogle** | Type / pattern search | `#loogle` / `loogle.lean-lang.org` (`?a + ?b = ?b + ?a`) |
+| **LeanSearch** | Natural language | `#leansearch "..."` / `leansearch.net` |
+| **LeanExplore** | Hybrid + ecosystem search | `leanexplore.com` (web, Python API, MCP) |
+| **Mathlib4 Docs** | API & module browsing | `leanprover-community.github.io/mathlib4_docs` |
+
+- **Loogle** (`https://loogle.lean-lang.org`) supports rich pattern queries such as
+  `List ?a → List (List ?a)`.
+- **LeanSearch** (`https://leansearch.net`) answers natural-language prompts like
+  `"sum of first n naturals"`.
+- **LeanExplore** (`https://www.leanexplore.com`) searches across `Mathlib`, `Batteries`, `Std`,
+  `PhysLean`, and related packages.
 
 ### Practical Search Workflow Today
 
@@ -107,8 +114,8 @@ In practice, experienced Lean users combine external search with local explorati
 
 ### Interactive Tutorials (Where to Start)
 
-- **Glimpse of Lean** (`https://github.com/PatrickMassot/GlimpseOfLean`) — **Recommended!** A concise,
-  hands-on tutorial ("for the impatient") that lets you experience proving
+- **Glimpse of Lean** (`https://github.com/PatrickMassot/GlimpseOfLean`) — **Recommended!**
+  A concise, hands-on tutorial ("for the impatient") that lets you experience proving
   theorems across logic, analysis, and algebra in just a few hours.
 - **The Natural Number Game (NNG4)** (`https://adam.math.hhu.de/#/g/leanprover-community/nng4`) and
   **The Mechanics of Proof** (Heather Macbeth) — Both are popular tutorials, targeted at people
@@ -131,10 +138,10 @@ chapters relevant to the topic or technique you are currently using:
 - **Lean Zulip (`https://leanprover.zulipchat.com`)** — The **most central community resource** for
   Lean 4. Live Q&A (`#new members`, `#mathlib4`), library design discussions, and formalization
   project coordination all happen here.
-- **Reservoir (`https://reservoir.lean-lang.org`)** — The official package index and registry for the
-  Lean 4 ecosystem, cataloging libraries, tools, and formalizations beyond Mathlib.
-- **Prominent Lean 4 Formalization Projects & Blueprints:** Large collaborative efforts coordinate on
-  Zulip and commonly use **Lean Blueprints** (`leanblueprint`) to connect human-readable LaTeX
+- **Reservoir (`https://reservoir.lean-lang.org`)** — The official package index and registry for
+  the Lean 4 ecosystem, cataloging libraries, tools, and formalizations beyond Mathlib.
+- **Prominent Lean 4 Formalization Projects & Blueprints:** Large collaborative efforts coordinate
+  on Zulip and commonly use **Lean Blueprints** (`leanblueprint`) to connect human-readable LaTeX
   proofs and dependency graphs directly to verified Lean declarations. Notable examples include:
   - **Polynomial Freiman–Ruzsa (`teorth/pfr`)** — Terence Tao and collaborators' rapid collaborative
     formalization in additive combinatorics.

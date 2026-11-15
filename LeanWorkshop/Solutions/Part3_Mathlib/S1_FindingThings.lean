@@ -10,10 +10,13 @@ import Mathlib.Algebra.Order.Ring.Int
 import Mathlib.Order.Basic
 
 /-!
-# Solutions for Part 3.1: Finding Things in Mathlib and Community Resources
+# Solutions — Part 3.1: Finding Things in Mathlib and Community Resources
+
+Complete, `sorry`-free reference solutions for
+`LeanWorkshop.Part3_Mathlib.S1_FindingThings`.
 -/
 
-namespace LeanWorkshop.Part3.Solutions
+namespace LeanWorkshop.Solutions.Part3
 
 /-- **Exercise 1:** Re-associate `a + (a + b)` using `Nat.add_assoc`. -/
 theorem ex1_absorb (a b : ℕ) : a + (a + b) = a + a + b :=
@@ -31,4 +34,4 @@ theorem ex3_sub_add_cancel (a b : ℤ) : a - b + b = a :=
 theorem ex4_le_max_left (a b : ℕ) : a ≤ max a b :=
   le_max_left a b
 
-end LeanWorkshop.Part3.Solutions
+end LeanWorkshop.Solutions.Part3

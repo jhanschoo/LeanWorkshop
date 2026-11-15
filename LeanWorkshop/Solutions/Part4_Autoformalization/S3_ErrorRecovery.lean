@@ -11,10 +11,13 @@ import Mathlib.Order.Monotone.Basic
 import Mathlib.Basic.Real.Basic
 
 /-!
-# Solutions for Part 4.3: Steering AI Agents & Guarding Against Modern Failure Modes
+# Solutions — Part 4.3: Steering AI Agents & Guarding Against Modern Failure Modes
+
+Complete, `sorry`-free reference solutions for
+`LeanWorkshop.Part4_Autoformalization.S3_ErrorRecovery`.
 -/
 
-namespace LeanWorkshop.Part4.Solutions
+namespace LeanWorkshop.Solutions.Part4
 
 /-- **Exercise 1:** Complete the square with `0 ≤ (x + 1 / 2) ^ 2` instead of the false subgoal. -/
 theorem ex1_fix_false_subgoal (x : ℝ) : -1 / 4 ≤ x ^ 2 + x := by
@@ -40,4 +43,4 @@ theorem ex3b_step_bound_fixed (f : ℝ → ℝ) (h : ∀ x y : ℝ, x + 1 ≤ y 
 theorem ex3c_step_bound_sanity : (0 : ℝ) + 2 ≤ 2 :=
   ex3b_step_bound_fixed id (fun _ _ h ↦ h)
 
-end LeanWorkshop.Part4.Solutions
+end LeanWorkshop.Solutions.Part4

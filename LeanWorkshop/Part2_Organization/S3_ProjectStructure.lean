@@ -104,8 +104,9 @@ def shiftDiag (n : ℕ) (p : Point2D) : Point2D :=
   sorry
 
 /-- **Exercise 1b:** Prove that shifting `p` by `0` returns `p`.
-Hint: Use `ext`, noting that proof irrelevance handles `nonneg_sum` automatically! -/
-theorem shiftDiag_zero (p : Point2D) : p.shiftDiag 0 = p := by
+Hint: Use `ext <;> simp [shiftDiag]`, noting that proof irrelevance handles `nonneg_sum`
+automatically! -/
+theorem shiftDiag_zero (p : Point2D) : shiftDiag 0 p = p := by
   sorry
 
 /-- **Exercise 2:** Prove that componentwise addition `p + q` is commutative.

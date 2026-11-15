@@ -84,10 +84,16 @@ lemma slack_mul_dist_le_residual (x : ℝ) {x_star : ℝ} (h_fix : T.IsFixedPt x
 theorem fixedPt_unique {x_star y_star : ℝ} ... := by ... -- proved using the stubs above!
 ```
 
-Outlining early also exposes **statement revisions** before any proof effort is wasted:
-- **Cleared denominators vs. division:** Writing `T.slack * |x - x_star| ≤ |x - T.toFun x|`
-  instead of `|x - x_star| ≤ |x - T.toFun x| / (1 - T.factor)` avoids `1 - c ≠ 0` division
-  side-conditions and lets `linarith` combine the bound directly with `abs_sub_le`.
+Outlining early exposes **statement revisions** and shows how **working vs. paper formulations**
+interact before any proof effort is wasted:
+- **Working bound vs. textbook bound (`Def_work` → `Def_paper`):** Textbooks typically write the
+  divided inequality `|x - x_star| ≤ |x - T.toFun x| / (1 - T.factor)`. Formally, keeping the
+  cleared-denominator product `T.slack * |x - x_star| ≤ |x - T.toFun x|` as our **working
+  bound (`Def_work`)** eliminates `1 - c ≠ 0` division guards and lets `linarith` act directly on
+  `fixedPt_unique` and `ex2_slack_mul_dist_next_le`. In an agent workflow, mark such intentional
+  deviations with an explicit `Design Note` comment so agents do not "helpful-fix" the lemma back
+  to the divided textbook form—and recover `|x - x_star| ≤ |x - T.toFun x| / (1 - T.factor)` at
+  the end via a one-line bridge theorem (`le_div_iff₀`) if the exported statement needs it.
 - **Explicit vs. implicit binders:** In `dist_fixed_step`, `h_fix : T.IsFixedPt x_star` mentions
   `x_star` (which can be `{x_star : ℝ}` implicit) but does not mention `x`. Keeping `(x : ℝ)`
   explicit lets callers write `T.dist_fixed_step x h_fix` cleanly without unresolved metavariables.

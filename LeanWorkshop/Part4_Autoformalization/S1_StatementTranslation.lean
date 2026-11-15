@@ -7,7 +7,6 @@ import Mathlib.Tactic.Basic
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
-import Mathlib.Tactic.Use
 import Mathlib.Basic.Real.Basic
 import Mathlib.Data.Int.Basic
 import Mathlib.Algebra.Order.Ring.Int

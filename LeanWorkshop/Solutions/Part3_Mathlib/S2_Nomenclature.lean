@@ -10,10 +10,13 @@ import Mathlib.Algebra.Order.Ring.Int
 import Mathlib.Order.Basic
 
 /-!
-# Solutions for Part 3.2: Mathlib Nomenclature and Dot Notation
+# Solutions — Part 3.2: Mathlib Nomenclature and Dot Notation
+
+Complete, `sorry`-free reference solutions for
+`LeanWorkshop.Part3_Mathlib.S2_Nomenclature`.
 -/
 
-namespace LeanWorkshop.Part3.Solutions
+namespace LeanWorkshop.Solutions.Part3
 
 /-- **Exercise 1:** Combine `a ≤ b` and `b < c` via `lt_of_le_of_lt`. -/
 theorem ex1_predict_name {a b c : ℤ} (h1 : a ≤ b) (h2 : b < c) : a < c :=
@@ -35,4 +38,4 @@ theorem ex4_dot_chain {a b c : ℕ} (h1 : a = b) (h2 : c = b) : a = c :=
 theorem ex5_lt_imp_le_and_ne {a b : ℕ} (h : a < b) : a ≤ b ∧ a ≠ b :=
   ⟨h.le, h.ne⟩
 
-end LeanWorkshop.Part3.Solutions
+end LeanWorkshop.Solutions.Part3

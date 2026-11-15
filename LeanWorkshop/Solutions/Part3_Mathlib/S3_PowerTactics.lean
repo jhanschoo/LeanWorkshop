@@ -19,10 +19,13 @@ import Aesop
 import Mathlib.Basic.Real.Basic
 
 /-!
-# Solutions for Part 3.3: Power Tactics in Mathlib
+# Solutions — Part 3.3: Tactics in Mathlib
+
+Complete, `sorry`-free reference solutions for
+`LeanWorkshop.Part3_Mathlib.S3_PowerTactics`.
 -/
 
-namespace LeanWorkshop.Part3.Solutions
+namespace LeanWorkshop.Solutions.Part3
 
 /-- **Exercise 1:** Expand `(x + y) ^ 3` over `ℝ` with `ring`. -/
 theorem ex1_ring_identity (x y : ℝ) :
@@ -59,4 +62,4 @@ theorem ex8_grind_congr (f : ℝ → ℝ) (x y : ℝ) (hxy : x + y = 4) (hf : f 
     f ((x + y) ^ 2) = 0 := by
   grind
 
-end LeanWorkshop.Part3.Solutions
+end LeanWorkshop.Solutions.Part3

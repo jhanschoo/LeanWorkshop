@@ -14,10 +14,10 @@ Informal Problem & Proof (LaTeX / English)
    ▼  [1. Agent-Driven Literature/Library Survey, Architectural Planning & Semantic Audit]
 Direct an agent to search `.lake/packages/mathlib`, external Lean 4 repos (Reservoir/Blueprints), & prior ITPs
    │  └─ Have it audit version skew, typeclass compatibility, & style; reuse or translate to Mathlib types.
-Core `structure`/`def` + `namespace` + `section`/`variable` + Main Statement
-   │  └─ Run `#check`/boundary checks on Mathlib & adapted definitions (`F12`, totalization/junk values).
-   ▼  [2. Top-Down Theory Outline (`sorry`-Stubbed Lemma Graph)]
-Intermediate `lemma`s (`:= by sorry`) + Target `theorem` proved from those lemmas
+Core `structure`/`def` (`Def_work` & `Def_paper`) + `namespace` + `section`/`variable` + Main Statement
+   │  └─ Run `#check`/boundary checks; flag hard-to-formalize steps & pin `Design Note`s for adapted `Def_work`.
+   ▼  [2. Top-Down Theory Outline (`sorry`-Stubbed Lemma Graph & Equivalence Bridges)]
+Intermediate `lemma`s on `Def_work` + Bridge (`Def_work ↔ Def_paper`) + Target `theorem` on `Def_paper`
    │  └─ Compiler checks dependency flow, binders, and signatures before helper proofs are written.
    ▼  [3. Incremental Fleshing Out & Statement Revision]
 Prove helper lemmas bottom-up; revise signatures when needed (clear denominators, fix binders, `@[simp]`)
@@ -46,6 +46,39 @@ Before letting an agent draft definitions in Stage 1, run a **tool-grounded surv
    - **Port the statement graph, not the tactic scripts:** Direct the agent to: (a) translate external carrier types and predicates into canonical Mathlib types/typeclasses, (b) extract only the intermediate `lemma` **signatures** as `:= by sorry` stubs to seed Stage 2's outline, and (c) discard legacy tactic scripts and re-prove each lemma from scratch in Stage 3 using modern Mathlib tactics (`grind`, `lia`, `fun_prop`, `positivity`, `gcongr`, `ring`, `linarith`) and naming conventions.
    - **Mandate automated semantic and axiom audits on adapted code:** Require the agent to run small boundary `example` checks ([`S1_StatementTranslation.lean`](S1_StatementTranslation.lean)) and `#print axioms` ([`S3_ErrorRecovery.lean`](S3_ErrorRecovery.lean)) on every adapted definition or theorem so semantic mismatches and hidden `sorry`s fail fast.
 
+### Managing Divergences Between Informal Proofs and Formal Developments
+
+Formalizing a theorem rarely means translating an informal paper step-for-step. Intermediate definitions and lemmas that look routine to experts often need deliberate adaptation—both to become formalizable within scope and to expose edge cases the prose quietly glossed over.
+
+1. **Why formal developments require subtly different definitions and intermediate lemmas:**
+   - **Expert-friendly vs. formalization-friendly arguments:** Informal proofs freely use maneuvers that are intuitive to domain experts but disproportionately expensive or out-of-scope to formalize literally—*"without loss of generality, sort and re-index the sum"*, *"perturb slightly into general position"*, *"pass to a limit / apply a density argument"*, or quotient/isomorphism identifications.
+   - **Elided tedium and unconscious gaps:** Experts routinely write *"the boundary case is similar"* or *"clearly extends to $k = 0$"* without realizing that rigor demands a strengthened inductive invariant, an explicit slack or guard parameter, or a modified carrier type—or that an intermediate claim in the paper is subtly false at a boundary.
+
+2. **Steering AI agents to the adapted definition/interpretation (preventing "textbook reversion"):**
+   - **Beware "canonical reversion":** Because LLMs have strong priors toward textbook definitions and standard proof paths, an unsteered agent will repeatedly "correct" an adapted working definition back into the naive textbook statement, or burn context attempting a 1,500-line literal WLOG/perturbation detour instead of a clean algebraic surrogate.
+   - **Ask agents to propose formalization-friendly surrogates in Stages 1–2:** Instruct the agent to flag high-friction informal idioms (WLOG re-indexing, limiting detours, quotient coercions, division guards) and suggest algebraic, inductive, or order-theoretic reformulations that align cleanly with existing Mathlib APIs.
+   - **Pin explicit "Intentional Deviation Notes" above adapted declarations:** Whenever your formalization replaces a textbook notion (`Def_paper`) with an adapted working version (`Def_work`) or strengthened invariant, place a prominent comment right above it—e.g.:
+     ```lean
+     /-! ### Design Note (Intentional Deviation from Informal Proof)
+     The paper states this step using division (`|x - x*| ≤ |x - T x| / (1 - c)`), whereas this
+     working lemma keeps the cleared-denominator form `(1 - c) * |x - x*| ≤ |x - T x|`.
+     Do NOT rewrite this back to the textbook divided form; internal API lemmas rely on this form. -/
+     ```
+   - **Lock the adaptation in Stage 2's `sorry` outline:** Once `Def_work` and the adapted intermediate `lemma` signatures are stubbed and verified in Stage 2, constrain Stage 3 prover agents to work within those signatures rather than inventing textbook subgoals.
+
+3. **Communicating differences with the mathematician / domain researcher:**
+   - **Translate formal friction into mathematical design questions (not Lean tactic jargon):** Researchers seldom know which informal steps are costly in Mathlib and may not consciously realize an adaptation is needed. Instead of reporting coercion or rewrite failures, ask crisp mathematical questions:
+     - *"Assuming $a_1 \le \dots \le a_n$ via WLOG sorting forces permutation bijections through every sum; can we phrase Lemma 3 as a symmetric invariant over unordered pairs instead?"*
+     - *"Step 2 divides by $1 - c$ (or $x$); can we carry the cleared-denominator inequality $(1 - c) A \le B$ as our primary inductive invariant?"*
+     - *"The proof invokes [Heavy Theorem X] solely to obtain [Property Y]; can we isolate [Property Y] as the intermediate lemma and prove it directly?"*
+   - **Surface concrete boundary counterexamples early:** When a naive intermediate lemma fails on a degenerate input ($x = 0$, empty set, non-strict bound), show the researcher the concrete Lean counterexample (`example : ¬ ...`) right away so you can decide together whether to strengthen hypotheses or refine the working definition.
+
+4. **Closing the loop — Proving Equivalence ("The Working-to-Paper Bridge Pattern"):**
+   Never leave a formalization proving only an unfamiliar internal reformulation (`Def_work`) when the researcher expects the theorem they recognize (`Def_paper`):
+   1. **State both:** Keep `Def_work` (tailored for internal proofs and Mathlib automation) alongside `Def_paper` (matching the informal statement or canonical Mathlib definition as transparently as possible).
+   2. **Prove the bridge (`Def_work ↔ Def_paper`):** State and prove an explicit equivalence theorem—or the exact implication needed by the main goal—as a dedicated milestone in the outline.
+   3. **Prove internally with `Def_work`, export with `Def_paper`:** Build the Stage 2–3 lemma graph on `Def_work`, then deduce the exported target `theorem` in terms of `Def_paper` cleanly in a few lines via the bridge lemma.
+
 ---
 
 ## 2. Copy-Paste Prompt Templates
@@ -57,6 +90,7 @@ Before letting an agent draft definitions in Stage 1, run a **tool-grounded surv
 > - **Mathlib search:** Search `.lake/packages/mathlib` (including `Archive/` and `Counterexamples/`) and verify candidate declarations in Lean with `#check`/`#synth`.
 > - **External & cross-ITP survey:** Search external Lean 4 packages (Reservoir, Blueprint repos) and prior formalizations (Lean 3, Isabelle/AFP, Coq/Rocq), inspecting any external repo in a scratch directory without adding Lake dependencies.
 > - **Reuse & Adaptation Assessment:** Report what exists in Mathlib, what external work you found, whether external code suffers from version skew, "API island" custom types, or brittle/poor proof style, and how you will reuse or translate definitions and lemma signatures into canonical Mathlib types (discarding legacy tactic scripts).
+> - **Informal-to-formal divergence audit:** Flag informal idioms that are hard to formalize literally, out of scope, or subtly underspecified at boundaries (WLOG re-indexing, limiting detours, partial ops, elided invariants). Where helpful, propose a formalization-friendly **working definition/invariant (`Def_work`)** alongside the paper statement (`Def_paper`), and add an in-file `Design Note` explaining why `Def_work` intentionally deviates from the paper so downstream agents do not revert it.
 > - **Architecture & Main statement:** Design the core `structure`/`def` anchored to Mathlib types, an accompanying `namespace` for dot notation, a `section` with shared `variable`s, and the target `theorem` ending in `:= by sorry`.
 > - **Semantic audit:** Test boundary conventions (`ℕ` subtraction/division, `/ 0`, `Real.sqrt` on negatives, implicit domain hypotheses) with `#check` and sanity `example`s, listing any explicit guards added.
 
@@ -64,8 +98,9 @@ Before letting an agent draft definitions in Stage 1, run a **tool-grounded surv
 
 > **Prompt:**
 > Given the definitions and target `theorem` below, produce a **top-down Lean 4 outline** (without proving the helper lemmas yet):
-> - Factor the informal argument into reusable intermediate `lemma`s inside the module's `namespace` and `section`, each ending in `:= by sorry`.
-> - Write a complete proof of the main `theorem` using only those stubbed lemmas (plus basic tactics), and verify that the main theorem compiles cleanly with zero errors.
+> - Preserve any `Design Note`-annotated working definitions or invariants (`Def_work`); do **not** revert them to textbook definitions unless explicitly asked.
+> - Factor the informal argument into reusable intermediate `lemma`s over `Def_work` inside the module's `namespace` and `section`, each ending in `:= by sorry`, and include an explicit **equivalence / bridge lemma (`Def_work ↔ Def_paper`)** if the internal formulation differs from the exported paper statement.
+> - Write a complete proof of the main `theorem` (in terms of `Def_paper` / canonical Mathlib types) using only those stubbed lemmas (plus basic tactics), and verify that the main theorem compiles cleanly with zero errors.
 > - Flag any awkward hypotheses (e.g. denominators that can be cleared multiplicatively, missing `@[simp]` lemmas, or explicit vs. implicit binder adjustments).
 > - Use Lean 4 syntax only (never Lean 3 `begin ... end` or `λ`).
 
@@ -81,7 +116,7 @@ Before letting an agent draft definitions in Stage 1, run a **tool-grounded surv
 
 > **Prompt:**
 > Perform a post-proof audit and cleanup of the Lean 4 development below (ideally in a fresh review pass):
-> - **Specification fidelity check:** Diff final `def` and `theorem` signatures against the informal problem statement to verify no hypotheses were strengthened or conclusions weakened during proving.
+> - **Specification fidelity & bridge check:** Diff final `def` and `theorem` signatures against the informal problem statement to verify no hypotheses were strengthened or conclusions weakened during proving, and ensure any adapted internal working definitions (`Def_work`) carry `Design Note` comments and are bridged cleanly to the exported paper/Mathlib statement (`Def_paper`).
 > - **Axiom & non-vacuity audit:** Run `#print axioms` on target theorems to confirm only standard axioms (`propext`, `Classical.choice`, `Quot.sound`) appear, and add a concrete instantiation `example` for each main theorem.
 > - **Structural refactoring:** Extract sprawling proof blocks into reusable helper `lemma`s inside the module's `namespace`/`section`, replace non-terminal `simp` with `simp only [...]`, and remove search tactics (`exact?`, `apply?`, `simp?`).
 > - **Build & style verification:** Run `lake build` to confirm exit code `0`, zero unexpected warnings, and lines ≤ 100 chars (`·` bullets, `fun x ↦ ...`).
@@ -101,6 +136,7 @@ Before letting an agent draft definitions in Stage 1, run a **tool-grounded surv
 - [ ] `lake build` exits with code `0` and no unexpected warnings.
 - [ ] Every target theorem and helper lemma is free of `sorry` (`admit` / `exact?` / `simp?` replaced with concrete terms).
 - [ ] Any definitions or lemmas adapted from external libraries are translated to canonical Mathlib types/naming conventions, refactored into short modular proofs, and verified with `#print axioms`.
+- [ ] Any intentional working-definition adaptations (`Def_work`) carry a `Design Note` comment and an explicit equivalence/bridge lemma connecting back to the informal/Mathlib statement (`Def_paper`).
 - [ ] Helper lemmas live in an appropriate `namespace` / `section` with clean binders and `@[simp]` tags where useful (rather than sprawling single-theorem scripts).
-- [ ] Imports are targeted (no barrel `import Mathlib.Tactic`; use `Mathlib.Data.Real.Basic` for `ℝ`).
+- [ ] Imports are targeted (no barrel `import Mathlib.Tactic`; use `Mathlib.Basic.Real.Basic` for `ℝ`).
 - [ ] Lines are ≤ 100 characters, bullets use `·`, lambdas use `fun x ↦ ...`, and no unused hypotheses remain.
