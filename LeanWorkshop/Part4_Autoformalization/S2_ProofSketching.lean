@@ -6,107 +6,181 @@ Authors: Johannes Choo <jhanschoo@gmail.com>
 import Mathlib.Tactic.Basic
 import Mathlib.Tactic.Ring
 import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.NormNum
 import Mathlib.Tactic.Positivity
+import Mathlib.Tactic.GCongr
 import Mathlib.Basic.Real.Basic
 
 /-!
-# Part 4.2: Proof Sketching (Draft, Sketch, Prove)
+# Part 4.2: Outlining and Incremental Formalization
 
-When formalizing non-trivial proofs—either manually or with an LLM—do **not** try to generate
-the entire tactic script in one shot. Use the **Draft, Sketch, Prove (DSP)** workflow:
+Real mathematical formalization—whether manual or AI-assisted—is **not** one-shot tactic
+generation, and non-trivial proofs rarely fit inside a single theorem with inline `have` steps.
+Instead, use a multi-stage **Plan → Outline → Flesh Out & Revise** workflow:
 
-1. **Draft:** Write a clear, step-by-step informal mathematical argument.
-2. **Sketch:** Translate each intermediate claim into a `have h_step : ... := by sorry` block,
-   and check that the *final conclusion compiles* from those `have` steps alone!
-3. **Prove:** Fill in each `sorry` subgoal independently (using `ring`, `linarith`, `positivity`,
-   `omega`, or targeted searches).
-
-Because Lean typechecks each `have` independently, a failed subgoal never breaks the overall
-structure of your proof!
+1. **Plan definitions & structure:** Design the core `structure` or `def`, place helper predicates
+   and API in a dedicated `namespace` (enabling dot notation), and group shared parameters with
+   `section` + `variable`.
+2. **Outline top-down with `sorry`-stubbed lemmas:** State intermediate `lemma`s with `:= by sorry`
+   and write the proof of the target theorem *first* so Lean verifies the dependency graph and
+   lemma signatures before you invest time proving helpers.
+3. **Flesh out incrementally & revise:** Prove helper lemmas bottom-up. When friction appears
+   (awkward division guards, missing `@[simp]` lemmas, or unresolved implicit binders), revise the
+   intermediate statements and re-check the whole chain.
 
 ---
 
-## 1. Walkthrough 1: AM-GM on Two Real Numbers
+## 1. Stage 1: Planning the Structure, Namespace, and Definitions
 
-**Informal Draft:**
-> To prove $2ab \le a^2 + b^2$, note that $(a - b)^2 \ge 0$ because any real square is
-> nonnegative. Expanding gives $(a - b)^2 = a^2 - 2ab + b^2 \ge 0$, so $2ab \le a^2 + b^2$.
+**Mathematical Goal:** Given a contraction mapping $T : \mathbb{R} \to \mathbb{R}$ with contraction
+factor $c \in [0, 1)$, prove the **a-posteriori residual error bound**
+$$(1 - c)|x - x^*| \le |x - T(x)|$$
+and deduce **uniqueness of fixed points**.
 
-**Step 2 (Sketch — notice the outer proof already compiles with `linarith`!):**
+We package the contraction axioms into `structure ContractionMap`, then open
+`namespace ContractionMap` so callers can write `T.IsFixedPt`, `T.slack`, and `T.fixedPt_unique`.
 -/
 
 namespace LeanWorkshop.Part4
 
-/-- Verified proof sketch: only the inner `have` steps carry `sorry`. -/
-theorem two_mul_le_sq_add_sq_sketch (a b : ℝ) : 2 * a * b ≤ a ^ 2 + b ^ 2 := by
-  have h_sq : 0 ≤ (a - b) ^ 2 := by sorry
-  have h_expand : (a - b) ^ 2 = a ^ 2 - 2 * a * b + b ^ 2 := by sorry
-  linarith
+/-- A contraction mapping on `ℝ` with Lipschitz factor `factor ∈ [0, 1)`. -/
+structure ContractionMap where
+  /-- The underlying map `ℝ → ℝ`. -/
+  toFun : ℝ → ℝ
+  /-- The contraction factor `c ∈ [0, 1)`. -/
+  factor : ℝ
+  /-- Nonnegativity of the contraction factor. -/
+  factor_nonneg : 0 ≤ factor
+  /-- Strict upper bound `factor < 1`. -/
+  factor_lt_one : factor < 1
+  /-- Global Lipschitz contraction inequality. -/
+  lip : ∀ x y : ℝ, |toFun x - toFun y| ≤ factor * |x - y|
 
-/-- Step 3 (Prove): discharge each `sorry` independently. -/
-theorem two_mul_le_sq_add_sq (a b : ℝ) : 2 * a * b ≤ a ^ 2 + b ^ 2 := by
-  have h_sq : 0 ≤ (a - b) ^ 2 := sq_nonneg (a - b)
-  have h_expand : (a - b) ^ 2 = a ^ 2 - 2 * a * b + b ^ 2 := by ring
-  linarith
+namespace ContractionMap
+
+/-- Predicate stating that `x` is a fixed point of `T`. -/
+def IsFixedPt (T : ContractionMap) (x : ℝ) : Prop :=
+  T.toFun x = x
+
+/-- The contraction slack `1 - T.factor`, strictly positive for every contraction. -/
+def slack (T : ContractionMap) : ℝ :=
+  1 - T.factor
 
 /-!
 ---
 
-## 2. Walkthrough 2: Isolating Algebra from Positivity via `have` and `calc`
+## 2. Stage 2 & 3: Top-Down Lemma Outlining, Revision, and Fleshing Out
 
-Separating algebraic identities (`ring`) from sign reasoning (`positivity` / `linarith`) keeps
-each subgoal within the decidable fragment of a single Mathlib tactic:
+In a real development, you first write the dependency graph below with `sorry` in `slack_pos`,
+`dist_fixed_step`, and `slack_mul_dist_le_residual`, and verify that `fixedPt_unique` compiles
+from those signatures alone.
+
+Outlining early also exposes **statement revisions** before any proof effort is wasted:
+- **Cleared denominators vs. division:** Writing `T.slack * |x - x_star| ≤ |x - T.toFun x|`
+  instead of `|x - x_star| ≤ |x - T.toFun x| / (1 - T.factor)` avoids `1 - c ≠ 0` division
+  side-conditions and lets `linarith` combine the bound directly with `abs_sub_le`.
+- **Explicit vs. implicit binders:** In `dist_fixed_step`, `h_fix : T.IsFixedPt x_star` mentions
+  `x_star` (which can be `{x_star : ℝ}` implicit) but does not mention `x`. Keeping `(x : ℝ)`
+  explicit lets callers write `T.dist_fixed_step x h_fix` cleanly without unresolved metavariables.
+
+Below is the fleshed-out, `sorry`-free `BasicAPI` section using shared
+`variable (T : ContractionMap)`.
 -/
 
-/-- Completing the square: `x ^ 2 + 4 * x + 7 ≥ 3` for all `x : ℝ`. -/
-theorem quad_lower_bound (x : ℝ) : 3 ≤ x ^ 2 + 4 * x + 7 := by
-  have h_complete : x ^ 2 + 4 * x + 7 = (x + 2) ^ 2 + 3 := by
-    ring
-  have h_sq : 0 ≤ (x + 2) ^ 2 := by
-    positivity
+section BasicAPI
+
+variable (T : ContractionMap)
+
+/-- Unfolding lemma for `T.IsFixedPt x`, registered with `@[simp]` for automation. -/
+@[simp]
+lemma isFixedPt_iff {x : ℝ} : T.IsFixedPt x ↔ T.toFun x = x :=
+  Iff.rfl
+
+/-- Every contraction has strictly positive slack `0 < 1 - T.factor`. -/
+lemma slack_pos : 0 < T.slack := by
+  unfold slack
+  linarith [T.factor_lt_one]
+
+/-- One application of `T` shrinks distance to any fixed point `x_star` by `T.factor`. -/
+lemma dist_fixed_step (x : ℝ) {x_star : ℝ} (h_fix : T.IsFixedPt x_star) :
+    |T.toFun x - x_star| ≤ T.factor * |x - x_star| := by
+  have h_lip := T.lip x x_star
+  rwa [h_fix] at h_lip
+
+/-- A-posteriori residual bound: `(1 - c) * |x - x_star| ≤ |x - T x|`. -/
+lemma slack_mul_dist_le_residual (x : ℝ) {x_star : ℝ} (h_fix : T.IsFixedPt x_star) :
+    T.slack * |x - x_star| ≤ |x - T.toFun x| := by
+  have h_tri : |x - x_star| ≤ |x - T.toFun x| + |T.toFun x - x_star| :=
+    abs_sub_le x (T.toFun x) x_star
+  have h_step : |T.toFun x - x_star| ≤ T.factor * |x - x_star| :=
+    T.dist_fixed_step x h_fix
+  unfold slack
   linarith
+
+/-- Uniqueness of fixed points: any two fixed points of `T` must be equal. -/
+theorem fixedPt_unique {x_star y_star : ℝ}
+    (hx : T.IsFixedPt x_star) (hy : T.IsFixedPt y_star) : x_star = y_star := by
+  have h_res : T.slack * |x_star - y_star| ≤ |x_star - T.toFun x_star| :=
+    T.slack_mul_dist_le_residual x_star hy
+  rw [hx, sub_self, abs_zero] at h_res
+  have h_nonneg : 0 ≤ T.slack * |x_star - y_star| := by
+    have := T.slack_pos
+    positivity
+  have h_zero : |x_star - y_star| = 0 := by
+    cases mul_eq_zero.mp (le_antisymm h_res h_nonneg) with
+    | inl h_s => linarith [T.slack_pos]
+    | inr h_d => exact h_d
+  exact sub_eq_zero.mp (abs_eq_zero.mp h_zero)
 
 /-!
 ---
 
-## 3. Exercises
+## 3. Exercises: Extending the `ContractionMap` Development
 
-In each exercise below, the outer proof skeleton is already verified! Replace each inner `sorry`
-inside the `have` blocks with a short tactic or proof term.
+Notice that these exercises live inside `section BasicAPI` and `namespace ContractionMap`, so
+`T : ContractionMap` is already in scope and earlier lemmas (`T.dist_fixed_step`,
+`T.slack_mul_dist_le_residual`, `T.fixedPt_unique`) can be called with dot notation.
 (Reference solutions are in
 `LeanWorkshop/Solutions/Part4_Autoformalization/S2_ProofSketching.lean`.)
 -/
 
-/-- **Exercise 1:** Symmetric 3-variable inequality via sum of squares. -/
-theorem ex1_sum_of_squares_bound (a b c : ℝ) :
-    a * b + b * c + c * a ≤ a ^ 2 + b ^ 2 + c ^ 2 := by
-  have h1 : 0 ≤ (a - b) ^ 2 + (b - c) ^ 2 + (c - a) ^ 2 := by
+/-- **Exercise 1:** Prove the two-step contraction bound for `T.toFun (T.toFun x)`.
+Hint: Complete the pre-outlined `have` steps using `T.dist_fixed_step` and `gcongr`. -/
+lemma ex1_dist_two_steps (x : ℝ) {x_star : ℝ} (h_fix : T.IsFixedPt x_star) :
+    |T.toFun (T.toFun x) - x_star| ≤ T.factor ^ 2 * |x - x_star| := by
+  have h1 : |T.toFun (T.toFun x) - x_star| ≤ T.factor * |T.toFun x - x_star| := by
     sorry
-  have h2 :
-      (a - b) ^ 2 + (b - c) ^ 2 + (c - a) ^ 2 =
-        2 * (a ^ 2 + b ^ 2 + c ^ 2 - (a * b + b * c + c * a)) := by
+  have h2 : |T.toFun x - x_star| ≤ T.factor * |x - x_star| := by
     sorry
-  linarith
+  have h_mul : T.factor * |T.toFun x - x_star| ≤ T.factor * (T.factor * |x - x_star|) := by
+    sorry
+  linarith [sq T.factor]
 
-/-- **Exercise 2:** Interval bound via separate `x` and `y` bounds. -/
-theorem ex2_abs_bound_sketch {x y : ℝ} (hx : -2 ≤ x ∧ x ≤ 2) (hy : -3 ≤ y ∧ y ≤ 3) :
-    2 * x - y ≤ 7 := by
-  have hx_upper : 2 * x ≤ 4 := by
-    sorry
-  have hy_lower : -3 ≤ y := by
-    sorry
-  linarith
+/-- **Exercise 2:** Prove the one-step-ahead residual bound
+`T.slack * |T.toFun x - x_star| ≤ T.factor * |x - T.toFun x|`
+by combining `T.dist_fixed_step` and `T.slack_mul_dist_le_residual`. -/
+lemma ex2_slack_mul_dist_next_le (x : ℝ) {x_star : ℝ} (h_fix : T.IsFixedPt x_star) :
+    T.slack * |T.toFun x - x_star| ≤ T.factor * |x - T.toFun x| := by
+  sorry
 
-/-- **Exercise 3:** Cubic polynomial nonnegativity on `[1, ∞)` by factoring. -/
-theorem ex3_cubic_factor_sketch {x : ℝ} (hx : 1 ≤ x) :
-    0 ≤ x ^ 3 - x ^ 2 - x + 1 := by
-  have h_factor : x ^ 3 - x ^ 2 - x + 1 = (x - 1) ^ 2 * (x + 1) := by
-    sorry
-  have h_sq : 0 ≤ (x - 1) ^ 2 := by
-    sorry
-  have h_pos : 0 ≤ x + 1 := by
-    sorry
-  rw [h_factor]
-  exact mul_nonneg h_sq h_pos
+/-- Concrete contraction map `x ↦ x / 2 + 1` with factor `1 / 2`. -/
+noncomputable def halfShift : ContractionMap where
+  toFun x := x / 2 + 1
+  factor := 1 / 2
+  factor_nonneg := by norm_num
+  factor_lt_one := by norm_num
+  lip x y := by
+    have h : x / 2 + 1 - (y / 2 + 1) = (1 / 2 : ℝ) * (x - y) := by ring
+    rw [h, abs_mul, abs_of_nonneg (by norm_num : (0 : ℝ) ≤ 1 / 2)]
+
+/-- **Exercise 3:** Show that `2` is the unique fixed point of `halfShift` using
+`halfShift.fixedPt_unique`. -/
+theorem ex3_halfShift_unique_fixedPt {y_star : ℝ} (hy : halfShift.IsFixedPt y_star) :
+    y_star = 2 := by
+  sorry
+
+end BasicAPI
+
+end ContractionMap
 
 end LeanWorkshop.Part4

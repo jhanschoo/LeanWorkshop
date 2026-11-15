@@ -3,48 +3,56 @@ Copyright (c) 2026 Johannes Choo <jhanschoo@gmail.com>. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Johannes Choo <jhanschoo@gmail.com>
 -/
-import Mathlib.Tactic.Basic
-import Mathlib.Tactic.Ring
-import Mathlib.Tactic.Linarith
-import Mathlib.Tactic.Positivity
-import Mathlib.Basic.Real.Basic
+import LeanWorkshop.Part4_Autoformalization.S2_ProofSketching
 
 /-!
-# Solutions for Part 4.2: Proof Sketching (Draft, Sketch, Prove)
+# Solutions for Part 4.2: Outlining and Incremental Formalization
 -/
 
 namespace LeanWorkshop.Part4.Solutions
 
-/-- **Exercise 1:** Prove the sum-of-squares steps with `positivity` and `ring`. -/
-theorem ex1_sum_of_squares_bound (a b c : ℝ) :
-    a * b + b * c + c * a ≤ a ^ 2 + b ^ 2 + c ^ 2 := by
-  have h1 : 0 ≤ (a - b) ^ 2 + (b - c) ^ 2 + (c - a) ^ 2 := by
-    positivity
-  have h2 :
-      (a - b) ^ 2 + (b - c) ^ 2 + (c - a) ^ 2 =
-        2 * (a ^ 2 + b ^ 2 + c ^ 2 - (a * b + b * c + c * a)) := by
-    ring
+open LeanWorkshop.Part4
+open ContractionMap
+
+section BasicAPI
+
+variable (T : ContractionMap)
+
+/-- **Exercise 1:** Prove the two-step contraction bound using `T.dist_fixed_step` and `gcongr`. -/
+lemma ex1_dist_two_steps (x : ℝ) {x_star : ℝ} (h_fix : T.IsFixedPt x_star) :
+    |T.toFun (T.toFun x) - x_star| ≤ T.factor ^ 2 * |x - x_star| := by
+  have h1 : |T.toFun (T.toFun x) - x_star| ≤ T.factor * |T.toFun x - x_star| :=
+    T.dist_fixed_step (T.toFun x) h_fix
+  have h2 : |T.toFun x - x_star| ≤ T.factor * |x - x_star| :=
+    T.dist_fixed_step x h_fix
+  have h_mul : T.factor * |T.toFun x - x_star| ≤ T.factor * (T.factor * |x - x_star|) := by
+    have := T.factor_nonneg
+    gcongr
+  linarith [sq T.factor]
+
+/-- **Exercise 2:** Combine `T.dist_fixed_step` and `T.slack_mul_dist_le_residual`. -/
+lemma ex2_slack_mul_dist_next_le (x : ℝ) {x_star : ℝ} (h_fix : T.IsFixedPt x_star) :
+    T.slack * |T.toFun x - x_star| ≤ T.factor * |x - T.toFun x| := by
+  have h_step : |T.toFun x - x_star| ≤ T.factor * |x - x_star| :=
+    T.dist_fixed_step x h_fix
+  have h_res : T.slack * |x - x_star| ≤ |x - T.toFun x| :=
+    T.slack_mul_dist_le_residual x h_fix
+  have h1 : T.slack * |T.toFun x - x_star| ≤ T.slack * (T.factor * |x - x_star|) := by
+    have := T.slack_pos.le
+    gcongr
+  have h2 : T.factor * (T.slack * |x - x_star|) ≤ T.factor * |x - T.toFun x| := by
+    have := T.factor_nonneg
+    gcongr
   linarith
 
-/-- **Exercise 2:** Discharge the interval subgoals from `hx` and `hy`. -/
-theorem ex2_abs_bound_sketch {x y : ℝ} (hx : -2 ≤ x ∧ x ≤ 2) (hy : -3 ≤ y ∧ y ≤ 3) :
-    2 * x - y ≤ 7 := by
-  have hx_upper : 2 * x ≤ 4 := by
-    linarith [hx.2]
-  have hy_lower : -3 ≤ y :=
-    hy.1
-  linarith
+/-- **Exercise 3:** Show `2` is a fixed point of `halfShift` and apply `fixedPt_unique`. -/
+theorem ex3_halfShift_unique_fixedPt {y_star : ℝ} (hy : halfShift.IsFixedPt y_star) :
+    y_star = 2 := by
+  have h2 : halfShift.IsFixedPt 2 := by
+    simp [halfShift]
+    norm_num
+  exact halfShift.fixedPt_unique hy h2
 
-/-- **Exercise 3:** Factor the cubic, prove each factor nonnegative, and combine. -/
-theorem ex3_cubic_factor_sketch {x : ℝ} (hx : 1 ≤ x) :
-    0 ≤ x ^ 3 - x ^ 2 - x + 1 := by
-  have h_factor : x ^ 3 - x ^ 2 - x + 1 = (x - 1) ^ 2 * (x + 1) := by
-    ring
-  have h_sq : 0 ≤ (x - 1) ^ 2 := by
-    positivity
-  have h_pos : 0 ≤ x + 1 := by
-    linarith
-  rw [h_factor]
-  exact mul_nonneg h_sq h_pos
+end BasicAPI
 
 end LeanWorkshop.Part4.Solutions

@@ -37,7 +37,7 @@ An interactive Lean 4 + Mathlib learning repository covering core Lean fundament
 
 ### Part 4: Autoformalization Demo (`LeanWorkshop/Part4_Autoformalization/`)
 - [`S1_StatementTranslation.lean`](LeanWorkshop/Part4_Autoformalization/S1_StatementTranslation.lean) — Natural language / LaTeX to Lean 4 signatures and semantic traps (`ℕ` subtraction/division, coercions).
-- [`S2_ProofSketching.lean`](LeanWorkshop/Part4_Autoformalization/S2_ProofSketching.lean) — The "Draft, Sketch, Prove" workflow using `have ... := by sorry` skeletons.
+- [`S2_ProofSketching.lean`](LeanWorkshop/Part4_Autoformalization/S2_ProofSketching.lean) — Outlining and incremental formalization (`structure`, `namespace`, `section`, `sorry`-stubbed helper lemmas, and statement revision) via `ContractionMap`.
 - [`S3_ErrorRecovery.lean`](LeanWorkshop/Part4_Autoformalization/S3_ErrorRecovery.lean) — Compiler-in-the-loop repair of common LLM hallucinations and type mismatches.
 - [`S4_LiveSandbox.lean`](LeanWorkshop/Part4_Autoformalization/S4_LiveSandbox.lean) — Curated problems ready for live AI/agent autoformalization.
 - [`S5_WorkflowGuide.md`](LeanWorkshop/Part4_Autoformalization/S5_WorkflowGuide.md) — Prompt templates and workflow recipes for live demos.
