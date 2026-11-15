@@ -14,9 +14,11 @@ import Mathlib.Basic.Real.Basic
 /-!
 # Part 4.2: Outlining and Incremental Formalization
 
-Real mathematical formalization—whether manual or AI-assisted—is **not** one-shot tactic
-generation, and non-trivial proofs rarely fit inside a single theorem with inline `have` steps.
-Instead, use a multi-stage **Plan → Outline → Flesh Out & Revise** workflow:
+While short standalone lemmas can often be proved in a single pass, larger mathematical
+developments usually benefit from decomposing statements and proof obligations instead of packing
+everything into one long theorem. Below is one basic **Plan → Outline → Flesh Out & Revise**
+workflow that works well as a starting point, alongside several published workflows in the
+literature:
 
 1. **Plan definitions & structure:** Design the core `structure` or `def`, place helper predicates
    and API in a dedicated `namespace` (enabling dot notation), and group shared parameters with
@@ -27,6 +29,24 @@ Instead, use a multi-stage **Plan → Outline → Flesh Out & Revise** workflow:
 3. **Flesh out incrementally & revise:** Prove helper lemmas bottom-up. When friction appears
    (awkward division guards, missing `@[simp]` lemmas, or unresolved implicit binders), revise the
    intermediate statements and re-check the whole chain.
+
+### Published Autoformalization Workflows & References
+
+The basic pattern above sits alongside more heavyweight published workflows:
+- **Draft, Sketch, and Prove (DSP) & modular library learning:** Rather than writing a monolithic
+  tactic script, DSP drafts an informal proof, translates it into a formal sketch with open
+  subgoals, and discharges each subgoal with automated provers—extended in **LEGO-Prover** with a
+  growing reusable lemma library and in **DeepSeek-Prover-V2** via recursive subgoal decomposition
+  (Jiang et al., ICLR 2023, `arXiv:2210.12283`; Wang et al., ICLR 2024, `arXiv:2310.00656`;
+  `arXiv:2504.21801`).
+- **Blueprint-driven & DAG-first formalization:** Collaborative projects often organize theorem
+  graphs with **Lean Blueprints** (`github.com/PatrickMassot/leanblueprint`, used in PFR and
+  Carleson), while agent-native workspaces like **Numina Fuse** (2026) maintain the dependency
+  DAG directly in Lean declarations so automated provers are not bottlenecked by LaTeX sync.
+- **Agentic & hybrid prover loops:** Multi-phase IDE/CLI agent workflows pair structured planning
+  and axiom/statement audits with interactive or autonomous proving—see `lean4-skills`
+  (`github.com/cameronfreer/lean4-skills`, AITP 2026), the **EconCS paper workflow**
+  (`arXiv:2606.13306`), and the **zkSecurity FRI** hybrid coding-agent + autonomous-prover loop.
 
 ---
 
