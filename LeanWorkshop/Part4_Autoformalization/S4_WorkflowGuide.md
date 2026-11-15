@@ -1,6 +1,6 @@
 # Autoformalization Workflow Guide (Live Demo Recipes)
 
-This guide accompanies [`S2_ProofSketching.lean`](S2_ProofSketching.lean) and [`S4_LiveSandbox.lean`](S4_LiveSandbox.lean) for multi-stage, non-one-shot AI/agent autoformalization.
+This guide accompanies [`S1_StatementTranslation.lean`](S1_StatementTranslation.lean), [`S2_ProofSketching.lean`](S2_ProofSketching.lean), and [`S3_ErrorRecovery.lean`](S3_ErrorRecovery.lean) for multi-stage, non-one-shot AI/agent autoformalization.
 
 ---
 
@@ -63,18 +63,11 @@ Diagnose errors from Infoview states, replace search tactics (`exact?`/`simp?`),
 
 ---
 
-## 3. Running the Walkthrough & Live Sandbox
+## 3. Running the Walkthrough
 
-1. **Multi-stage walkthrough (`S2_ProofSketching.lean`):**
-   - Inspect [`S2_ProofSketching.lean`](S2_ProofSketching.lean) to see how `ContractionMap` progresses from **Stage 1** (`structure ContractionMap`, `namespace ContractionMap`, `IsFixedPt`, `slack`) through **Stages 2–3** (`section BasicAPI`, intermediate lemmas `slack_pos`, `dist_fixed_step`, `slack_mul_dist_le_residual`, and `fixedPt_unique`), including why clearing denominators and making `x` explicit improved the outline.
-   - Complete **Exercises 1–3** inside `section BasicAPI` and compare against [`LeanWorkshop/Solutions/Part4_Autoformalization/S2_ProofSketching.lean`](../Solutions/Part4_Autoformalization/S2_ProofSketching.lean).
-2. **Live Sandbox (`S4_LiveSandbox.lean`):**
-   - Open [`S4_LiveSandbox.lean`](S4_LiveSandbox.lean) alongside the Lean 4 Infoview (`Ctrl+Shift+Enter` / `Cmd+Shift+Enter` in VS Code) and walk through **Challenges 1–4**:
-     - **Challenge 1 (`challenge1_consecutive_squares`):** `ring` after verifying the statement uses `ℤ` (avoiding `ℕ` subtraction truncation).
-     - **Challenge 2 (`challenge2_weighted_average`):** Splitting nonlinear steps (`w * (b - a) ≥ 0` via `mul_nonneg`) from linear combination (`linarith`).
-     - **Challenge 3 (`challenge3_gauss_sum`):** `induction n with | zero => ... | succ k ih => ...` combined with `rw [sumUpTo]` and `ring`.
-     - **Challenge 4 (`challenge4_cauchy_schwarz_2d`):** Factoring Lagrange's identity as a helper step before concluding with `sq_nonneg` and `linarith`.
-   - Compare live proofs against [`LeanWorkshop/Solutions/Part4_Autoformalization/S4_LiveSandbox.lean`](../Solutions/Part4_Autoformalization/S4_LiveSandbox.lean).
+- **Multi-stage walkthrough (`S2_ProofSketching.lean`):**
+  - Inspect [`S2_ProofSketching.lean`](S2_ProofSketching.lean) to see how `ContractionMap` progresses from **Stage 1** (`structure ContractionMap`, `namespace ContractionMap`, `IsFixedPt`, `slack`) through **Stages 2–3** (`section BasicAPI`, intermediate lemmas `slack_pos`, `dist_fixed_step`, `slack_mul_dist_le_residual`, and `fixedPt_unique`), including why clearing denominators and making `x` explicit improved the outline.
+  - Complete **Exercises 1–3** inside `section BasicAPI` and compare against [`LeanWorkshop/Solutions/Part4_Autoformalization/S2_ProofSketching.lean`](../Solutions/Part4_Autoformalization/S2_ProofSketching.lean).
 
 ---
 

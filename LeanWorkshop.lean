@@ -18,7 +18,6 @@ import LeanWorkshop.Part3_Mathlib.S3_PowerTactics
 import LeanWorkshop.Part4_Autoformalization.S1_StatementTranslation
 import LeanWorkshop.Part4_Autoformalization.S2_ProofSketching
 import LeanWorkshop.Part4_Autoformalization.S3_ErrorRecovery
-import LeanWorkshop.Part4_Autoformalization.S4_LiveSandbox
 
 -- Solutions
 import LeanWorkshop.Solutions.Part1_Basics.S1_InfoviewAndSymbols
@@ -32,4 +31,3 @@ import LeanWorkshop.Solutions.Part3_Mathlib.S3_PowerTactics
 import LeanWorkshop.Solutions.Part4_Autoformalization.S1_StatementTranslation
 import LeanWorkshop.Solutions.Part4_Autoformalization.S2_ProofSketching
 import LeanWorkshop.Solutions.Part4_Autoformalization.S3_ErrorRecovery
-import LeanWorkshop.Solutions.Part4_Autoformalization.S4_LiveSandbox
