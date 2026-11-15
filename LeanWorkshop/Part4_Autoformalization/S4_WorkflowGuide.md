@@ -29,11 +29,15 @@ Audit final `def`/`theorem` signatures against the informal math, run `#print ax
 
 ### Agent-Driven Survey & Using Formalized Libraries Outside Mathlib
 
-Before letting an agent draft definitions in Stage 1, run a **tool-grounded survey** using search/research agents rather than relying on the model's parametric memory. Agents can grep local sources, browse repositories, and translate cross-language mathematical blueprints in minutes—if you constrain how they read and adapt what they find.
+Before letting an agent draft definitions in Stage 1, prepare the workspace (`lake exe cache get && lake build` so `.olean` caches exist—with ≥ 16 GB RAM recommended—so LSP/MCP tools like `lean-lsp-mcp` and `lean4-skills` do not stall) and run a **tool-grounded survey** using search/research agents rather than relying on model memory. Agents can grep local sources, browse repositories, and translate cross-language mathematical blueprints in minutes—if you constrain how they read and adapt what they find.
 
 1. **How to direct AI agents to conduct the survey (never rely on model memory alone):**
-   - **Local `.lake/packages/mathlib` & Lean environment first:** Instruct the agent to search `.lake/packages/mathlib/Mathlib` directly (e.g. with `rg`), inspect `Archive/` and `Counterexamples/`, and verify candidate declarations via `#check`/`#synth` (or Loogle MCP tools) against your project's *pinned* Mathlib commit rather than guessing names from training data (see [`S1_FindingThings.lean`](../Part3_Mathlib/S1_FindingThings.lean)).
-   - **External Lean 4 ecosystem (Reservoir, GitHub, Blueprints):** Dispatch a web-enabled or research subagent to search **Reservoir** (Lean's package index), GitHub (`language:Lean`), and Blueprint-driven research repos (e.g., *PFR*, *Carleson*, *PrimeNumberTheoremAnd*, *PhysLean*/*HepLean*, *SciLean*). **Practical tip:** Have the agent clone promising external repos into a scratch or `/tmp` folder outside your Lake project so it can grep and read `.lean` files without altering `lakefile.toml`.
+   - **Local `.lake/packages/mathlib` & LSP index first:** Instruct the agent to follow the practical retrieval hierarchy:
+     1. `lean_local_search` (in `lean-lsp-mcp`, resolving `@[to_additive]` names absent from raw `.lean` text) + `rg` over `.lake/packages/mathlib/Mathlib`, `Archive/`, and `Counterexamples/`.
+     2. `Loogle` (`--loogle-local` for offline type-pattern / AST queries without rate limits).
+     3. Semantic and Zulip/GitHub-trained retrievers (`LeanSearch-v2`, `LeanExplore`, `Lean Finder`—which also indexes external research repos; avoid legacy `Moogle`, which is no longer maintained).
+     4. Goal-state premise search (`exact?`, `apply?`, `rw?`, `lean_hammer_premise`) on `simp`-normalized goals after `clear`ing extraneous hypotheses, verified via `#check`/`#synth` against your pinned Mathlib commit (see [`S1_FindingThings.lean`](../Part3_Mathlib/S1_FindingThings.lean)).
+   - **External Lean 4 ecosystem (Reservoir, Palomar, GitHub, Blueprints):** Dispatch a web-enabled or research subagent to search **Reservoir** (Lean's package index), **Palomar** (`palomar-registry.org`, the public registry of audited Lean 4 formalizations), GitHub (`language:Lean`), `Lean Finder`, and Blueprint-driven research repos (e.g., *PFR*, *Carleson*, *PrimeNumberTheoremAnd*, *PhysLean*/*HepLean*, *SciLean*). **Practical tip:** Have the agent clone promising external repos into a scratch or `/tmp` folder outside your Lake project so it can grep and read `.lean` files without altering `lakefile.toml`.
    - **Cross-ITP & paper reconnaissance (Lean 3, Isabelle/AFP, Coq/Rocq):** Ask a research subagent to search Isabelle's Archive of Formal Proofs (AFP), Coq/Rocq (`mathcomp`), HOL Light, or unported Lean 3 repos. Coding agents are strong at reading `.thy` or `.v` files and distilling the *mathematical decomposition, inductive invariants, and boundary hypotheses* into a Lean 4 blueprint, even when the original proofs sit in another proof assistant.
 
 2. **Why agents must not blindly import or copy external libraries (Common hazards):**
@@ -64,7 +68,7 @@ Formalizing a theorem rarely means translating an informal paper step-for-step. 
      working lemma keeps the cleared-denominator form `(1 - c) * |x - x*| ≤ |x - T x|`.
      Do NOT rewrite this back to the textbook divided form; internal API lemmas rely on this form. -/
      ```
-   - **Lock the adaptation in Stage 2's `sorry` outline:** Once `Def_work` and the adapted intermediate `lemma` signatures are stubbed and verified in Stage 2, constrain Stage 3 prover agents to work within those signatures rather than inventing textbook subgoals.
+   - **Lock the target header, let the in-Lean lemma DAG evolve, and enforce stuck detection:** Freeze the paper-facing target `theorem` header, stub `Def_work` and intermediate `lemma`s directly inside Lean (rather than locking every intermediate step to a static LaTeX blueprint that bottlenecks fast provers), and apply stuck-detection rules: if a subgoal blocks twice, switch from tactic search to lemma splitting or counterexample refutation.
 
 3. **Communicating differences with the mathematician / domain researcher:**
    - **Translate formal friction into mathematical design questions (not Lean tactic jargon):** Researchers seldom know which informal steps are costly in Mathlib and may not consciously realize an adaptation is needed. Instead of reporting coercion or rewrite failures, ask crisp mathematical questions:
@@ -74,10 +78,10 @@ Formalizing a theorem rarely means translating an informal paper step-for-step. 
    - **Surface concrete boundary counterexamples early:** When a naive intermediate lemma fails on a degenerate input ($x = 0$, empty set, non-strict bound), show the researcher the concrete Lean counterexample (`example : ¬ ...`) right away so you can decide together whether to strengthen hypotheses or refine the working definition.
 
 4. **Closing the loop — Proving Equivalence ("The Working-to-Paper Bridge Pattern"):**
-   Never leave a formalization proving only an unfamiliar internal reformulation (`Def_work`) when the researcher expects the theorem they recognize (`Def_paper`):
+   Never leave a formalization proving only an unfamiliar internal reformulation (`Def_work`) when the researcher expects the theorem they recognize (`Def_paper`)—and beware the **`BEq` (`Theorem_work ↔ Theorem_paper`) fallacy**, where any two provable theorems imply each other vacuously regardless of mathematical meaning:
    1. **State both:** Keep `Def_work` (tailored for internal proofs and Mathlib automation) alongside `Def_paper` (matching the informal statement or canonical Mathlib definition as transparently as possible).
-   2. **Prove the bridge (`Def_work ↔ Def_paper`):** State and prove an explicit equivalence theorem—or the exact implication needed by the main goal—as a dedicated milestone in the outline.
-   3. **Prove internally with `Def_work`, export with `Def_paper`:** Build the Stage 2–3 lemma graph on `Def_work`, then deduce the exported target `theorem` in terms of `Def_paper` cleanly in a few lines via the bridge lemma.
+   2. **Bridge at the predicate/definition level (`∀ x, Def_work x ↔ Def_paper x`):** Prove equivalence between the definitions or predicates themselves (not between closed, independently proved theorems).
+   3. **Prove internally with `Def_work`, deduce `Theorem_paper` directly:** Build the Stage 2–3 lemma graph on `Def_work`, then deduce the exported target `theorem` in terms of `Def_paper` cleanly in a few lines by applying `Theorem_work` and the bridge lemma.
 
 ---
 
@@ -116,8 +120,8 @@ Formalizing a theorem rarely means translating an informal paper step-for-step. 
 
 > **Prompt:**
 > Perform a post-proof audit and cleanup of the Lean 4 development below (ideally in a fresh review pass):
-> - **Specification fidelity & bridge check:** Diff final `def` and `theorem` signatures against the informal problem statement to verify no hypotheses were strengthened or conclusions weakened during proving, and ensure any adapted internal working definitions (`Def_work`) carry `Design Note` comments and are bridged cleanly to the exported paper/Mathlib statement (`Def_paper`).
-> - **Axiom & non-vacuity audit:** Run `#print axioms` on target theorems to confirm only standard axioms (`propext`, `Classical.choice`, `Quot.sound`) appear, and add a concrete instantiation `example` for each main theorem.
+> - **Specification fidelity, elaboration & back-translation check:** Inspect `#check @theorem_name` with `set_option autoImplicit false`, run a blinded `Lean → NL` back-translation of each target `def`/`theorem` to confirm no hypotheses were strengthened or scope narrowed, and verify any `Def_work` carries a `Design Note` plus a predicate-level bridge (`∀ x, Def_work x ↔ Def_paper x`) to `Def_paper`.
+> - **Axiom, source-pattern & hypothesis audit:** Run `#print axioms` / `lean_verify` to confirm only `[propext, Classical.choice, Quot.sound]` appear (no `sorryAx`, `unsafe`, `opaque`, `@[implemented_by]`, or `set_option debug.*`), add a non-trivial concrete instantiation `example` for each main theorem, and check the unused-variable linter (`lean_minimal_hypotheses`) so every hypothesis is load-bearing.
 > - **Structural refactoring:** Extract sprawling proof blocks into reusable helper `lemma`s inside the module's `namespace`/`section`, replace non-terminal `simp` with `simp only [...]`, and remove search tactics (`exact?`, `apply?`, `simp?`).
 > - **Build & style verification:** Run `lake build` to confirm exit code `0`, zero unexpected warnings, and lines ≤ 100 chars (`·` bullets, `fun x ↦ ...`).
 
@@ -131,12 +135,11 @@ Formalizing a theorem rarely means translating an informal paper step-for-step. 
 
 ---
 
-## 4. Checklist Before Committing Formalized Code
+## 4. Six-Step Statement & Proof Validation Checklist
 
-- [ ] `lake build` exits with code `0` and no unexpected warnings.
-- [ ] Every target theorem and helper lemma is free of `sorry` (`admit` / `exact?` / `simp?` replaced with concrete terms).
-- [ ] Any definitions or lemmas adapted from external libraries are translated to canonical Mathlib types/naming conventions, refactored into short modular proofs, and verified with `#print axioms`.
-- [ ] Any intentional working-definition adaptations (`Def_work`) carry a `Design Note` comment and an explicit equivalence/bridge lemma connecting back to the informal/Mathlib statement (`Def_paper`).
-- [ ] Helper lemmas live in an appropriate `namespace` / `section` with clean binders and `@[simp]` tags where useful (rather than sprawling single-theorem scripts).
-- [ ] Imports are targeted (no barrel `import Mathlib.Tactic`; use `Mathlib.Basic.Real.Basic` for `ℝ`).
-- [ ] Lines are ≤ 100 characters, bullets use `·`, lambdas use `fun x ↦ ...`, and no unused hypotheses remain.
+1. **Freeze headers & pin versions:** Lock target `def`/`theorem` headers (verify via `git diff` or the Palomar-style `Challenge.lean` / `Solution.lean` split checked with `lake comparator` and `formalization.yaml` provenance metadata) and pin Lean + Mathlib commits before proving.
+2. **Record informal-to-formal deviations & back-translate:** Document adapted `Def_work` choices with `Design Note`s and verify fidelity with blinded `Lean → NL` directional back-translation.
+3. **Reuse Mathlib & bridge custom `Def_work` definitions:** Prefer Mathlib's bundled/unbundled APIs; pair any custom `Def_work` with worked examples and a predicate-level equivalence bridge (`∀ x, Def_work x ↔ Def_paper x`, never a closed-theorem `BEq` check), modularized into helper lemmas in a `namespace`/`section`.
+4. **Inspect full elaborated type:** Run `#check @theorem_name` with `set_option autoImplicit false` to audit every implicit binder, coercion (`↑`), universe level, and synthesized typeclass instance.
+5. **Falsify & rule out triviality/vacuity:** Construct a concrete simultaneous witness for all preconditions, verify existentials (`∃ x, ...`) cannot hold trivially (`0`, `∅`), and add non-trivial sanity/completeness checks.
+6. **Audit axioms, banned patterns, hypotheses & style:** Confirm `#print axioms` / `lean_verify` shows only standard axioms (no `sorryAx`, `unsafe`, `opaque`, `@[implemented_by]`, or `set_option debug.*`), verify every hypothesis is used (`lean_minimal_hypotheses`), ensure `lake build` exits `0` with targeted imports (e.g., `Mathlib.Basic.Real.Basic` / `Mathlib.Data.Real.Basic`), lines ≤ 100 chars, `·` bullets, and `fun x ↦ ...`.

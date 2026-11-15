@@ -31,7 +31,9 @@ When you know a fact should already exist in the local context or Mathlib, ask L
 
 **Best practice:** Always replace `exact?`, `apply?`, `rw?`, and `simp?` with their suggested
 output once found! Leaving search tactics in finished proofs slows down compilation and makes
-builds sensitive to future library changes.
+builds sensitive to future library changes. Also put your goal and hypotheses in `simp` normal
+form and `clear` extraneous hypotheses before running `exact?`, `apply?`, or `rw?` so library
+search matches Mathlib's canonical lemmas instead of stalling on clutter.
 -/
 
 namespace LeanWorkshop.Part3
@@ -82,64 +84,93 @@ these search tools:
 | Tool | Best For | Usage & Example |
 | :--- | :--- | :--- |
 | **Loogle** | Type / pattern search | `#loogle` / `loogle.lean-lang.org` (`?a + ?b = ?b + ?a`) |
-| **LeanSearch** | Natural language | `#leansearch "..."` / `leansearch.net` |
+| **LeanSearch** | Natural language (v2 Reasoning) | `#leansearch "..."` / `leansearch.net` |
 | **LeanExplore** | Hybrid + ecosystem search | `leanexplore.com` (web, Python API, MCP) |
+| **Lean Finder** | Proof-state & repo search | `leanfinder.org` / `@leanfinder` on Zulip |
 | **Mathlib4 Docs** | API & module browsing | `leanprover-community.github.io/mathlib4_docs` |
 
 - **Loogle** (`https://loogle.lean-lang.org`) supports rich pattern queries such as
   `List ?a → List (List ?a)`.
-- **LeanSearch** (`https://leansearch.net`) answers natural-language prompts like
-  `"sum of first n naturals"`.
+- **LeanSearch** (`https://leansearch.net`) offers semantic search and a v2 Reasoning mode for
+  natural-language prompts like `"sum of first n naturals"`.
 - **LeanExplore** (`https://www.leanexplore.com`) searches across `Mathlib`, `Batteries`, `Std`,
   `PhysLean`, and related packages.
+- **Lean Finder** (`https://leanfinder.org`) indexes Mathlib4 and GitHub research repos by
+  proof state or statement, and runs as `@leanfinder` on Zulip. *(Legacy **Moogle** is no
+  longer maintained; prefer the modern search tools above.)*
 
 ### Practical Search Workflow Today
 
 In practice, experienced Lean users combine external search with local exploration:
-1. **Start with Loogle or LeanSearch / LeanExplore:** Use **Loogle** when you know the rough type
-   shape or constants involved, and **LeanSearch** or **LeanExplore** when you only have a
-   natural-language description (or want to search across downstream libraries beyond Mathlib).
-   You can also invoke `#loogle` and `#leansearch "..."` directly in-editor when `LeanSearchClient`
-   is available.
-2. **Grep your local `.lake/packages/mathlib` checkout** (or use VS Code workspace symbol search
-   `Ctrl+T` / `Cmd+T`): reading neighboring lemmas in the same Mathlib file often reveals naming
-   conventions and helper theorems faster than any web engine.
-3. **Pair LLMs / coding agents with Lean's kernel:** Ask an LLM (or an agent connected via MCP to
-   LeanExplore / local grep) to suggest candidate Mathlib names, then verify and adapt them inside
-   Lean with `#check`, `exact?`, `apply?`, and `rw?`.
+1. **Start with Loogle, LeanSearch, LeanExplore, or Lean Finder:** Use **Loogle** for exact
+   type shapes, **LeanSearch** (with v2 Reasoning mode) or **LeanExplore** for natural language
+   and downstream packages, and **Lean Finder** for proof-state queries across Mathlib4 and
+   GitHub research repos (or `#loogle` / `#leansearch` in-editor via `LeanSearchClient`).
+2. **Grep or run `lean_local_search` locally:** Search your `.lake/packages/mathlib` checkout
+   (or VS Code `Ctrl+T` / `Cmd+T`). Note that `lean_local_search` (in `lean-lsp-mcp`) resolves
+   `@[to_additive]`-generated declarations that raw text grep misses, while reading nearby
+   Mathlib lemmas reveals naming conventions and helpers faster than any web engine.
+3. **Pair coding agents with Lean's kernel:** Connect an agent via `lean-lsp-mcp` (and
+   LeanExplore) to propose candidates, then verify and adapt them inside Lean with `#check`,
+   `exact?`, `apply?`, and `rw?`.
 
 ---
 
 ## 4. Learning Resources, Community, and Ecosystem
 
-### Interactive Tutorials (Where to Start)
+### Interactive Tutorials, Playgrounds, and Case Studies
 
+- **Lean Live Playground** (`https://live.lean-lang.org`) — Zero-install browser editor with
+  Mathlib preloaded for trying proofs or sharing minimal reproducible examples.
 - **Glimpse of Lean** (`https://github.com/PatrickMassot/GlimpseOfLean`) — **Recommended!**
   A concise, hands-on tutorial ("for the impatient") that lets you experience proving
   theorems across logic, analysis, and algebra in just a few hours.
 - **The Natural Number Game (NNG4)** (`https://adam.math.hhu.de/#/g/leanprover-community/nng4`) and
-  **The Mechanics of Proof** (Heather Macbeth) — Both are popular tutorials, targeted at people
-  still somewhat fresh to logic and mathematics.
+  **The Mechanics of Proof** (`https://hrmacbeth.github.io/math2001/`) — Popular introductory
+  tutorials for readers still building fluency with formal logic and mathematics.
+- **Mathlib Tutorials (`leanprover-community/tutorials`)** — Classic exercise-based repository for
+  practicing Mathlib idioms in analysis, topology, and algebra.
+- **Case Studies & Statement Design Guides:**
+  - **Terence Tao's Lean 4 Proof Tours** — Detailed walkthroughs documenting real-world
+    formalization choices, refactoring, and proof engineering in research mathematics.
+  - **zkSecurity FRI Post-Mortem** — Concrete lessons from formalizing cryptographic protocols in
+    Lean 4, highlighting statement fidelity and engineering trade-offs.
+  - **Getting the Statement Right** (`https://robertj1.com`) — A practical six-check guide to
+    catching subtle definition mismatches, edge cases, and vacuity bugs in Lean statements.
 
 ### Topic Reference Books (Consult by Topic, Not Cover-to-Cover)
 
 It is **not necessarily productive to read these books cover to cover**; instead, consult the
 chapters relevant to the topic or technique you are currently using:
 
-- **Mathematics in Lean (MIL)** (`leanprover-community/mathematics_in_lean`) — Hands-on idioms for
-  working with Mathlib's algebraic hierarchy, topology, filters, calculus, and measure theory.
-- **Theorem Proving in Lean 4 (TPIL4)** — Thorough reference on dependent type theory foundations,
-  inductive types, typeclasses, and tactic basics.
-- **Functional Programming in Lean (FPIL)** — Reference when writing computable Lean 4 programs,
-  monadic code, or custom tactics and metaprograms.
+- **Mathematics in Lean (MIL)** (`https://leanprover-community.github.io/mathematics_in_lean/`) —
+  Idioms for Mathlib's algebraic hierarchy, topology, filters, calculus, and measure theory.
+- **Theorem Proving in Lean 4 (TPIL4)** (`https://lean-lang.org/theorem_proving_in_lean4/`) —
+  Thorough reference on dependent type theory, inductive types, typeclasses, and tactic basics.
+- **Functional Programming in Lean (FPIL)**
+  (`https://lean-lang.org/functional_programming_in_lean/`) — Reference when writing computable
+  Lean 4 programs, monadic code, or custom tactics and metaprograms.
 
-### Community, Package Index, and Prominent Projects
+### Community, Package Index, Tooling, and Projects
 
 - **Lean Zulip (`https://leanprover.zulipchat.com`)** — The **most central community resource** for
-  Lean 4. Live Q&A (`#new members`, `#mathlib4`), library design discussions, and formalization
-  project coordination all happen here.
+  Lean 4. Live Q&A (`#new members`, `#mathlib4`), the `@leanfinder` search bot, library design
+  discussions, and formalization coordination all happen here.
 - **Reservoir (`https://reservoir.lean-lang.org`)** — The official package index and registry for
   the Lean 4 ecosystem, cataloging libraries, tools, and formalizations beyond Mathlib.
+- **Palomar (`https://palomar-registry.org`)** — Public registry ("preprint server") for
+  machine-checked Lean 4 formalizations (Lean FRO & ICARM), indexing immutable repository
+  snapshots verified via `lake comparator` (`Challenge.lean` vs. `Solution.lean`), independent
+  kernel replay, and `formalization.yaml` provenance disclosures.
+- **Agentic & Verification Tooling:**
+  - **`lean-lsp-mcp`** (`https://github.com/oOo0oOo/lean-lsp-mcp`) — MCP server exposing Lean
+    Infoview diagnostics, goal states, and `lean_local_search` (`@[to_additive]` support) to agents.
+  - **`lean4-skills`** (`https://github.com/cameronfreer/lean4-skills`) — Reusable Lean 4 and
+    Mathlib workflow skills, prompts, and verification checklists for coding agents.
+  - **`lake comparator`** (`https://github.com/leanprover/comparator`) — Sandboxed verifier for
+    checking theorem-statement and axiom equivalence when auditing formalizations.
+  - **Paperproof** — VS Code extension and interactive proof visualizer showing backwards and
+    forwards tactic proof structure.
 - **Prominent Lean 4 Formalization Projects & Blueprints:** Large collaborative efforts coordinate
   on Zulip and commonly use **Lean Blueprints** (`leanblueprint`) to connect human-readable LaTeX
   proofs and dependency graphs directly to verified Lean declarations. Notable examples include:
@@ -151,6 +182,8 @@ chapters relevant to the topic or technique you are currently using:
     theorem in harmonic analysis.
   - **PrimeNumberTheoremAnd (`AlexKontorovich/PrimeNumberTheoremAnd`)** — Formalization of the
     Prime Number Theorem with classical error terms and analytic number theory.
+  - **Formal Conjectures (`google-deepmind/formal-conjectures`)** — Open-source repository of
+    formalized open conjectures in Lean 4, useful for benchmarking and statement style.
   - **Domain Libraries (e.g., `PhysLean`, `SciLean`, `Cslib`)** — Ecosystem packages for physics,
     scientific computing, and computer science discoverable on Reservoir.
 

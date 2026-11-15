@@ -31,7 +31,7 @@ An interactive Lean 4 + Mathlib learning repository covering core Lean fundament
 - [`S3_ProjectStructure.lean`](LeanWorkshop/Part2_Organization/S3_ProjectStructure.lean) — Module-to-path mapping, `lakefile.toml`, `lean-toolchain`, and `lake-manifest.json`.
 
 ### Part 3: Working with Mathlib (`LeanWorkshop/Part3_Mathlib/`)
-- [`S1_FindingThings.lean`](LeanWorkshop/Part3_Mathlib/S1_FindingThings.lean) — `exact?`, `apply?`, `rw?`, `simp?`, Loogle, LeanSearch, LeanExplore, and community resources.
+- [`S1_FindingThings.lean`](LeanWorkshop/Part3_Mathlib/S1_FindingThings.lean) — `exact?`, `apply?`, `rw?`, `simp?`, Loogle, LeanSearch, LeanExplore, Lean Finder, agentic tooling, and community resources.
 - [`S2_Nomenclature.lean`](LeanWorkshop/Part3_Mathlib/S2_Nomenclature.lean) — Capitalization conventions, decoding Mathlib lemma names, structural names vs. eponyms, symbol dictionaries, suffixes, and dot notation.
 - [`S3_PowerTactics.lean`](LeanWorkshop/Part3_Mathlib/S3_PowerTactics.lean) — `simp`, `ring`, `abel`, `group`, `linarith`, `omega`, `lia`, `norm_num`, `positivity`, `ext`, `gcongr`, `fun_prop`, `push Not`, `aesop`, and `grind`.
 
@@ -54,16 +54,27 @@ All modules are imported from the root barrel file [`LeanWorkshop.lean`](LeanWor
 
 ## Community Resources & Tutorials
 
-- **Books & Interactive Tutorials**
+- **Books, Tutorials & Case Studies**
   - [*Glimpse of Lean*](https://github.com/PatrickMassot/GlimpseOfLean) — Recommended concise, hands-on introduction to proving mathematics in Lean 4.
   - [*Mathematics in Lean*](https://leanprover-community.github.io/mathematics_in_lean/) — Hands-on introduction to proving mathematics with Mathlib.
   - [*Theorem Proving in Lean 4*](https://lean-lang.org/theorem_proving_in_lean4/) — Official guide to Lean 4's type theory and tactic language.
+  - [*Functional Programming in Lean*](https://lean-lang.org/functional_programming_in_lean/) — Reference for computable Lean 4 programs, monadic code, and metaprogramming.
   - [*The Natural Number Game*](https://adam.math.hhu.de/#/g/leanprover-community/nng4) — Browser-based interactive introduction to Lean tactics.
+  - [*The Mechanics of Proof*](https://hrmacbeth.github.io/math2001/) — Heather Macbeth's introductory textbook on Lean 4 proofs.
+  - [Lean Live Playground](https://live.lean-lang.org/) — Zero-install browser Lean 4 + Mathlib editor for quick experiments and tutorials.
+  - [Getting the Statement Right](https://robertj1.com/) — Six-check guide for ensuring formalized Lean statements capture the intended theorem.
+  - **Proof Tours & Case Studies** — `leanprover-community/tutorials`, Terence Tao's Lean 4 Proof Tours, and the zkSecurity FRI formalization post-mortem.
 - **Search & Documentation**
   - [Mathlib4 Documentation](https://leanprover-community.github.io/mathlib4_docs/) — Browsable API docs for all of Mathlib.
   - [Loogle](https://loogle.lean-lang.org/) — Type- and pattern-based search across Lean & Mathlib.
-  - [LeanSearch](https://leansearch.net/) — Natural-language semantic search for Mathlib theorems.
+  - [LeanSearch](https://leansearch.net/) — Natural-language semantic search (with v2 Reasoning mode) for Mathlib theorems.
   - [LeanExplore](https://www.leanexplore.com/) — Hybrid semantic + ecosystem search across `Mathlib`, `Batteries`, `Std`, `PhysLean`, etc.
+  - [Lean Finder](https://leanfinder.org/) — Proof-state and semantic search indexing Mathlib4 and GitHub research repos (also available via the `@leanfinder` Zulip bot).
   - [Lean Reservoir](https://reservoir.lean-lang.org/) — Index of Lean 4 packages and projects.
+  - [Palomar](https://palomar-registry.org/) — Public registry ("preprint server") for machine-checked Lean 4 mathematical formalizations, audited via `lake comparator` and independent kernel replay.
+- **Agentic & Verification Tooling**
+  - [`lean-lsp-mcp`](https://github.com/oOo0oOo/lean-lsp-mcp) — MCP server connecting coding agents to Lean's LSP, Infoview diagnostics, and `lean_local_search`.
+  - [`lean4-skills`](https://github.com/cameronfreer/lean4-skills) — Reusable Lean 4 / Mathlib agent skills, prompts, and verification checklists.
+  - [`lake comparator`](https://github.com/leanprover/comparator) — Sandboxed theorem-statement and axiom equivalence verifier.
 - **Community**
-  - [Lean Zulip Chat](https://leanprover.zulipchat.com/) — Main community forum (especially `#new members` and `#mathlib4`).
+  - [Lean Zulip Chat](https://leanprover.zulipchat.com/) — Main community forum (especially `#new members` and `#mathlib4`), including the `@leanfinder` bot.

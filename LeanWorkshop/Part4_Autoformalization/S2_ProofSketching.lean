@@ -37,8 +37,10 @@ factor $c \in [0, 1)$, prove the **a-posteriori residual error bound**
 $$(1 - c)|x - x^*| \le |x - T(x)|$$
 and deduce **uniqueness of fixed points**.
 
-We package the contraction axioms into `structure ContractionMap`, then open
-`namespace ContractionMap` so callers can write `T.IsFixedPt`, `T.slack`, and `T.fixedPt_unique`.
+We package the contraction axioms into `structure ContractionMap` (Mathlib's **bundled structure**
+pattern, bundling `toFun`, `factor`, and axioms together), while defining `IsFixedPt` as an
+**unbundled predicate** inside `namespace ContractionMap` so callers can write `T.IsFixedPt`,
+`T.slack`, and `T.fixedPt_unique`.
 -/
 
 namespace LeanWorkshop.Part4
@@ -97,6 +99,10 @@ interact before any proof effort is wasted:
 - **Explicit vs. implicit binders:** In `dist_fixed_step`, `h_fix : T.IsFixedPt x_star` mentions
   `x_star` (which can be `{x_star : ℝ}` implicit) but does not mention `x`. Keeping `(x : ℝ)`
   explicit lets callers write `T.dist_fixed_step x h_fix` cleanly without unresolved metavariables.
+- **Living in-Lean declaration DAGs vs. static LaTeX blueprints:** Static LaTeX blueprints excel
+  for coordinating large human teams, yet maintaining a separate statement-by-statement LaTeX graph
+  often bottlenecks fast AI agents. A better hybrid is to freeze the paper-facing target theorem
+  header while letting the intermediate `sorry`-stubbed lemma DAG evolve directly inside Lean.
 
 Below is the Stage 3 fleshed-out, `sorry`-free `BasicAPI` section using shared
 `variable (T : ContractionMap)`.

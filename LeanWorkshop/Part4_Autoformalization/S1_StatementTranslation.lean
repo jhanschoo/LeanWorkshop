@@ -130,30 +130,37 @@ convenient default ("junk") value outside their natural domain:
 - `a / 0 = 0` on `ℕ`, `ℤ`, `ℚ`, `ℝ`
 - `a - b = 0` on `ℕ` when `a ≤ b`
 - `Real.sqrt x = 0` for `x < 0`
-- `deriv f x = 0` when `f` is not differentiable at `x`
+- `Real.log 0 = 0` and `Real.log x = Real.log |x|` for `x < 0`
+- `deriv f x = 0` when `f` is not differentiable at `x` (and Lebesgue integrals of non-integrable
+  functions evaluate to `0`)
 - `sSup s` / `sInf s` return a default value when `s : Set ℝ` is empty or unbounded
+- `ContDiff ℝ ⊤ f` denotes **analytic** ($\omega$) functions in Mathlib, whereas $C^\infty$ smooth
+  is `ContDiff ℝ ∞ f`
 
 To check whether an unfamiliar Mathlib definition might be misaligned with your informal intent:
 
-1. **Jump to the definition & read "Implementation notes" (`F12` / hover / `#print`):**
+1. **Disable `autoImplicit` and inspect `#check @theorem_name`:**
+   With `autoImplicit` enabled, forgetting `open Real` makes `π > 0` silently quantify `π` as an
+   arbitrary variable! Use `set_option autoImplicit false` and `#check @name` to expose every
+   implicit binder, coercion (`↑`), universe level, and synthesized typeclass instance.
+2. **Jump to the definition & read "Implementation notes" (`F12` / hover / `#print`):**
    Press `F12` on any symbol in VS Code to open its Mathlib file. Module headers and docstrings
    usually spell out edge-case conventions and why a totalization choice was made.
-2. **Inspect the hypotheses of surrounding API lemmas (`#check`):**
+3. **Inspect the hypotheses of surrounding API lemmas (`#check`):**
    Look at the theorems proved right next to the definition. Extra hypotheses—such as `b ≤ a` in
    `Nat.sub_add_cancel`, `y ≠ 0` in `div_mul_cancel₀`, `0 ≤ x` in `Real.sq_sqrt`, or
    `DifferentiableAt ℝ f x` in derivative rules—reveal the exact domain where the usual
    mathematical behavior holds.
-3. **Probe degenerate and out-of-domain inputs (`#eval`, `norm_num`, `simp`):**
+4. **Probe degenerate and out-of-domain inputs (`#eval`, `norm_num`, `simp`):**
    Evaluate or simplify the expression on `0`, `1`, negative numbers, `∅`, or discontinuous
    functions to see directly what the definition returns outside the intended domain.
-4. **Try to refute your statement on boundary cases before proving it:**
-   Before investing effort in a proof of `∀ x, P x`, check if `x = 0`, `x < 0`, or `s = ∅` gives a
-   quick counterexample (`¬ ∀ x, P x`). You can also use property-based testing (`plausible`) or
-   ask an LLM to look for degenerate counterexamples.
-5. **Prove a sanity-check corollary (guard against vacuity):**
-   Even if a statement compiles and is provable, missing or contradictory hypotheses can make it
-   vacuously true. Specialize your theorem to a concrete non-trivial case to confirm it actually
-   says something meaningful.
+5. **Try to refute or trivialize your statement on boundary cases before proving it:**
+   Check if `x = 0`, `x < 0`, or `s = ∅` gives a quick counterexample (`¬ ∀ x, P x`), and confirm
+   that existentials (`∃ x, ...`) cannot be satisfied by trivial `0` or `∅` witnesses (`plausible`
+   or agent counterexample search can help here).
+6. **Prove a sanity-check corollary & verify hypotheses are load-bearing:**
+   Specialize your theorem to a concrete non-trivial input to rule out vacuity, and check Lean's
+   unused-variable linter (or `lean_minimal_hypotheses`) to confirm no hypothesis is ignored.
 -/
 
 -- Because `(x : ℝ) / 0 = 0` by totalization, `x / y * y = x` fails at `y = 0`:
@@ -162,8 +169,9 @@ example : ¬ (∀ x y : ℝ, x / y * y = x) := by
   have h1 : (1 : ℝ) / 0 * 0 = 1 := h 1 0
   linarith
 
--- Inspecting Mathlib's cancellation lemma reveals the required domain guard `y ≠ 0`:
-#check div_mul_cancel₀
+-- Disable autoImplicit and use `@` to expose implicit parameters and domain guards like `y ≠ 0`:
+set_option autoImplicit false
+#check @div_mul_cancel₀
 
 /-!
 ---

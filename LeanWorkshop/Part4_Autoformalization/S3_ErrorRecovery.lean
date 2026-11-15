@@ -16,8 +16,11 @@ import Mathlib.Basic.Real.Basic
 # Part 4.3: Steering AI Agents & Guarding Against Modern Failure Modes
 
 Modern AI agents run **with the Lean compiler in the loop** (`lake env lean`, LSP diagnostics,
-and MCP search tools). Shallow syntactic bugs—hallucinated lemma names, legacy Lean 3 syntax, or
-flipped `rw` directions—are normally fixed by the agent in seconds before you ever inspect a file.
+and MCP harnesses such as `lean-lsp-mcp`—exposing `lean_goal`, `lean_diagnostic_messages`,
+`lean_multi_attempt`, `lean_verify`, and `lean_minimal_hypotheses`—paired with protocol layers
+like `lean4-skills` that enforce header locking and stuck detection). Shallow syntactic bugs
+(hallucinated lemma names, legacy Lean 3 syntax, flipped `rw` directions) are normally fixed in
+seconds before you ever inspect a file.
 
 The real failure modes today are **semantic and architectural**: code that compiles cleanly with
 exit code `0`, yet silently proves the wrong theorem, isolates itself from Mathlib, loops on a
@@ -29,15 +32,25 @@ false subgoal, or leaves behind brittle spaghetti scripts.
 
 When told *"make the file compile with zero `sorry`s,"* an agent may subtly alter a `def` or
 `theorem` signature—weakening the conclusion, adding contradictory hypotheses so the theorem holds
-vacuously, or slipping in `axiom` / `sorryAx`.
+vacuously, leaving `autoImplicit` on so unbound symbols generalize silently, or slipping in `axiom`
+/ `sorryAx` / `unsafe`.
 
 **How to guard against it:**
-1. **Lock target signatures:** Check `git diff` to ensure `def` and `theorem` headers did not
-   drift while proofs were being repaired.
-2. **Audit axioms (`#print axioms`):** Verify that only standard axioms (`propext`,
-   `Classical.choice`, `Quot.sound`) appear—never `sorryAx` or custom `axiom`s.
-3. **Write a concrete instantiation test:** Apply the proved theorem to specific numbers; any
-   contradictory hypothesis immediately causes the test to fail.
+1. **Freeze challenge headers (`git diff` / `lake comparator`):** Keep target `def` and `theorem`
+   signatures locked during proof passes, and inspect `#check @theorem_name` with
+   `set_option autoImplicit false`.
+2. **Audit axioms & source-level bypasses (`#print axioms` / `lean_verify`):** Confirm only
+   standard axioms (`propext`, `Classical.choice`, `Quot.sound`) appear—never `sorryAx`, custom
+   `axiom`s, `unsafe`, `opaque`, `@[implemented_by]`, or `set_option debug.*`.
+3. **Verify simultaneous satisfiability & load-bearing hypotheses:** Instantiate the proved theorem
+   on concrete inputs to rule out vacuity, and check Lean's unused-variable linter
+   (`lean_minimal_hypotheses`) to confirm no hypothesis was made redundant.
+4. **Use blinded directional back-translation (`Lean → NL`) & avoid the `BEq` (`P ↔ Q`) trap:**
+   Have an independent session back-translate the Lean theorem into English and verify
+   `Lean → NL` implication (catching scope narrowing like $N = 2$). Never treat `Theorem₁ ↔
+   Theorem₂` as proof of alignment: any two true theorems are logically equivalent! Bridge
+   equivalences at the **predicate/definition level** (`∀ x, Def_work x ↔ Def_paper x`), or
+   deduce `Theorem_paper` directly from `Theorem_work`.
 -/
 
 namespace LeanWorkshop.Part4
@@ -60,6 +73,11 @@ theorem two_mul_le_sq {x : ℝ} (hx : 2 ≤ x) : 2 * x ≤ x ^ 2 := by
 example : (2 : ℝ) * 3 ≤ 3 ^ 2 :=
   two_mul_le_sq (by norm_num)
 
+/-- The `BEq` (`P ↔ Q`) fallacy: any two provable theorems are logically equivalent in Lean,
+even when one is a trivial statement (`1 + 1 = 2`) unrelated to `two_mul_le_sq`! -/
+example : (1 + 1 = 2) ↔ (∀ x : ℝ, 2 ≤ x → 2 * x ≤ x ^ 2) :=
+  ⟨fun _ _ hx ↦ two_mul_le_sq hx, fun _ ↦ rfl⟩
+
 /-!
 ---
 
@@ -70,8 +88,10 @@ Agents frequently reinvent definitions from scratch—for example, writing
 `Monotone`. Although the file compiles, every downstream proof becomes an isolated "API island"
 cut off from Mathlib's `Monotone.add`, `Monotone.comp`, and `@[simp]` / `@[fun_prop]` lemmas.
 
-- **Fix:** Search Mathlib first (`Loogle`, `LeanSearch`, `LeanExplore`, or local grep) before
-  defining standard concepts, and bridge any necessary domain wrappers via `@[simp]` lemmas.
+- **Fix:** Search Mathlib first (`lean_local_search` resolving `@[to_additive]` names, `Loogle`,
+  `LeanSearch-v2`, `LeanExplore`, `Lean Finder`, or local `rg`) before defining standard concepts.
+  Keep goals in `simp` normal form and `clear` extraneous hypotheses before running `exact?`,
+  `apply?`, or `rw?`, and bridge any necessary domain wrappers via `@[simp]` lemmas.
 -/
 
 /-- Using Mathlib's `Monotone` gives composition and addition in one line. -/
@@ -88,8 +108,10 @@ An agent will often outline a plausible-sounding `have` claim that is actually *
 example, asserting `x ≤ x ^ 2` for an arbitrary `x : ℝ`—and then burn dozens of turns trying
 `linarith`, `nlinarith`, and `grind` on an unprovable subgoal.
 
-- **Fix:** When an intermediate `have` resists automation, immediately test it on `0`, `1 / 2`, or
-  negative inputs (`¬ ∀ x, ...`) and revise the subgoal statement instead of forcing tactics.
+- **Fix:** Enforce **stuck-detection rules**: if the same subgoal blocker recurs twice, halt tactic
+  search and force the agent either to test boundary counterexamples (`/lean4:disprove`,
+  `plausible`, or `0`, `1 / 2`, negative inputs via `¬ ∀ x, ...`) or to split/revise the subgoal
+  statement instead of forcing tactics.
 -/
 
 -- Refuting the false intermediate subgoal `∀ x : ℝ, x ≤ x ^ 2` at `x = 1 / 2`:
