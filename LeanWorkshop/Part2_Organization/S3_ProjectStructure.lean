@@ -98,23 +98,23 @@ namespace Point2D
 
 /-- **Exercise 1a:** Define diagonal shift `shiftDiag (n : ℕ) (p : Point2D)` that adds `(n : ℤ)`
 to both coordinates of `p`.
-Solution: Construct the result with `⟨p.x + n, p.y + n, by ...⟩` and prove the invariant using
+Hint: Construct the result with `⟨p.x + n, p.y + n, by ...⟩` and prove the invariant using
 `have := p.nonneg_sum; omega`. -/
 def shiftDiag (n : ℕ) (p : Point2D) : Point2D :=
   sorry
 
 /-- **Exercise 1b:** Prove that shifting `p` by `0` returns `p`.
-Solution: Use `ext`, noting that proof irrelevance handles `nonneg_sum` automatically! -/
+Hint: Use `ext`, noting that proof irrelevance handles `nonneg_sum` automatically! -/
 theorem shiftDiag_zero (p : Point2D) : p.shiftDiag 0 = p := by
   sorry
 
 /-- **Exercise 2:** Prove that componentwise addition `p + q` is commutative.
-Solution: Start with `ext`, then simplify with `simp [Int.add_comm]`. -/
+Hint: Start with `ext`, then simplify with `simp [Int.add_comm]`. -/
 theorem add_comm_point (p q : Point2D) : p + q = q + p := by
   sorry
 
 /-- **Exercise 3:** Prove that swapping coordinates distributes over `+`.
-Solution: `ext <;> simp` uses the `@[simp]` lemmas from `S2_Lemmas.lean` on both coordinates! -/
+Hint: `ext <;> simp` uses the `@[simp]` lemmas from `S2_Lemmas.lean` on both coordinates! -/
 theorem swap_add (p q : Point2D) : (p + q).swap = p.swap + q.swap := by
   sorry
 
